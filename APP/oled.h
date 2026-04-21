@@ -11,8 +11,8 @@
 #define OLED_SDA_Set()  HAL_GPIO_WritePin(OLED_SDA_GPIO_Port, OLED_SDA_Pin, GPIO_PIN_SET);
 
 
-#define OLED_CMD  0	//Ð´ÃüÁî
-#define OLED_DATA 1	//Ð´Êý¾Ý
+#define OLED_CMD  0	//Ð´ï¿½ï¿½ï¿½ï¿½
+#define OLED_DATA 1	//Ð´ï¿½ï¿½ï¿½ï¿½
 
 
 void OLED_ClearPoint(uint8_t x,uint8_t y);
@@ -34,6 +34,7 @@ void OLED_ShowChar(uint8_t x,uint8_t y,uint8_t chr,uint8_t size1,uint8_t mode);
 void OLED_ShowChar6x8(uint8_t x,uint8_t y,uint8_t chr,uint8_t mode);
 void OLED_ShowString(uint8_t x,uint8_t y,uint8_t *chr,uint8_t size1,uint8_t mode);
 void OLED_ShowNum(uint8_t x,uint8_t y,uint32_t num,uint8_t len,uint8_t size1,uint8_t mode);
+void OLED_ShowHex(uint8_t x,uint8_t y,uint8_t num,uint8_t len,uint8_t size1,uint8_t mode);
 void OLED_ShowChinese(uint8_t x,uint8_t y,uint8_t num,uint8_t size1,uint8_t mode);
 void OLED_ScrollDisplay(uint8_t num,uint8_t space,uint8_t mode);
 void OLED_ShowPicture(uint8_t x,uint8_t y,uint8_t sizex,uint8_t sizey,uint8_t BMP[],uint8_t mode);
