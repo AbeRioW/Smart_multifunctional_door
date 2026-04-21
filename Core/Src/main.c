@@ -19,12 +19,16 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "spi.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "oled.h"
 #include "RC522.h"
+#include "AS608.h"
+#include "ui.h"
+#include "flash.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -135,13 +139,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   OLED_Init();
-  OLED_Clear();
-  OLED_ShowString(0,0,(uint8_t*)"Key:",8,1);
-  OLED_ShowString(0,2,(uint8_t*)"Card ID:",8,1);
-  OLED_Refresh();
+  Flash_Init();
+  UI_Init();
   PCD_Init();
+  AS608_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,50 +155,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    static uint8_t lastKey = 0;
     uint8_t key = Key_Scan();
-    static uint8_t last_key = 0;
     
-    if(key != 0 && key != last_key)
+    if(key != 0 && key != lastKey)
     {
-        OLED_Clear();
-        OLED_ShowString(0,0,(uint8_t*)"Key:",8,1);
-        OLED_ShowNum(32,0,key,2,8,1);
-        OLED_ShowString(0,2,(uint8_t*)"Card ID:",8,1);
-        OLED_Refresh();
+        UI_HandleKey(key);
     }
+    lastKey = key;
     
-    last_key = key;
+    UI_Process();
     
-    uint8_t status;
-    uint8_t card_type[2];
-    uint8_t card_id[4];
-    static uint8_t last_card_id[4] = {0};
-    
-    status = PCD_Request(PICC_REQIDL, card_type);
-    if(status == PCD_OK)
-    {
-        status = PCD_Anticoll(card_id);
-        if(status == PCD_OK)
-        {
-            if(card_id[0] != last_card_id[0] || card_id[1] != last_card_id[1] || 
-               card_id[2] != last_card_id[2] || card_id[3] != last_card_id[3])
-            {
-                OLED_ShowString(0,3,(uint8_t*)"        ",8,1);
-                OLED_ShowHex(64,2,card_id[0],2,8,1);
-                OLED_ShowHex(80,2,card_id[1],2,8,1);
-                OLED_ShowHex(96,2,card_id[2],2,8,1);
-                OLED_ShowHex(112,2,card_id[3],2,8,1);
-                OLED_Refresh();
-                
-                last_card_id[0] = card_id[0];
-                last_card_id[1] = card_id[1];
-                last_card_id[2] = card_id[2];
-                last_card_id[3] = card_id[3];
-            }
-        }
-    }
-    
-    HAL_Delay(100);
+    HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }

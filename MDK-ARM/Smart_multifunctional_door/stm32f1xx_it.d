@@ -26,4 +26,9 @@ smart_multifunctional_door\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/s
 smart_multifunctional_door\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h
 smart_multifunctional_door\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 smart_multifunctional_door\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h
+smart_multifunctional_door\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 smart_multifunctional_door\stm32f1xx_it.o: ../Core/Inc/stm32f1xx_it.h
+smart_multifunctional_door\stm32f1xx_it.o: ../Core/Inc/usart.h
+smart_multifunctional_door\stm32f1xx_it.o: ../App/AS608.h
+smart_multifunctional_door\stm32f1xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+smart_multifunctional_door\stm32f1xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
