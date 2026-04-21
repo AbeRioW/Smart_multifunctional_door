@@ -27,16 +27,26 @@ Project File Date:  04/22/2026
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Smart_multifunctional_door'
+compiling flash.c...
+..\APP\flash.h(7): warning:  #47-D: incompatible redefinition of macro "FLASH_PAGE_SIZE"  (declared at line 241 of "../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h")
+  #define FLASH_PAGE_SIZE      0x400  // 1KB per page
+..\APP\flash.c: 1 warning, 0 errors
 compiling ui.c...
 ..\APP\flash.h(7): warning:  #47-D: incompatible redefinition of macro "FLASH_PAGE_SIZE"  (declared at line 241 of "../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h")
   #define FLASH_PAGE_SIZE      0x400  // 1KB per page
 ..\APP\RC522.h(151): warning:  #1-D: last line of file ends without a newline
   #endif
 ..\APP\ui.c: 2 warnings, 0 errors
+compiling main.c...
+../App/RC522.h(151): warning:  #1-D: last line of file ends without a newline
+  #endif
+../App/flash.h(7): warning:  #47-D: incompatible redefinition of macro "FLASH_PAGE_SIZE"  (declared at line 241 of "../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h")
+  #define FLASH_PAGE_SIZE      0x400  // 1KB per page
+../Core/Src/main.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=10896 RO-data=6944 RW-data=32 ZI-data=3232  
+Program Size: Code=11444 RO-data=6944 RW-data=32 ZI-data=3232  
 FromELF: creating hex file...
-"Smart_multifunctional_door\Smart_multifunctional_door.axf" - 0 Error(s), 2 Warning(s).
+"Smart_multifunctional_door\Smart_multifunctional_door.axf" - 0 Error(s), 5 Warning(s).
 
 <h2>Software Packages used:</h2>
 

@@ -77,11 +77,11 @@ uint8_t Flash_ReadNFCIDs(NFC_CardInfo* cards)
     for(uint8_t i = 0; i < MAX_NFC_IDS; i++)
     {
         uint32_t id = *(uint32_t*)(FLASH_NFC_IDS_ADDR + i * 4);
-        uint8_t type = *(uint8_t*)(FLASH_NFC_TYPES_ADDR + i);
+        uint32_t typeWord = *(uint32_t*)(FLASH_NFC_TYPES_ADDR + i * 4);
         if(id != 0xFFFFFFFF)
         {
             cards[count].id = id;
-            cards[count].type = type;
+            cards[count].type = (uint8_t)typeWord;
             count++;
         }
     }
@@ -123,8 +123,8 @@ uint8_t Flash_AddNFCID(uint32_t id, uint8_t type)
     // 写入新ID
     HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_NFC_IDS_ADDR + emptyIndex * 4, id);
     
-    // 写入新类型（作为字节写入）
-    HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD, FLASH_NFC_TYPES_ADDR + emptyIndex, (uint16_t)type);
+    // 写入新类型（作为word写入）
+    HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_NFC_TYPES_ADDR + emptyIndex * 4, (uint32_t)type);
     
     HAL_FLASH_Lock();
     
@@ -186,7 +186,7 @@ uint8_t Flash_RemoveNFCID(uint32_t id)
     for(uint8_t i = 0; i < count - 1; i++)
     {
         HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_NFC_IDS_ADDR + i * 4, cards[i].id);
-        HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD, FLASH_NFC_TYPES_ADDR + i, (uint16_t)cards[i].type);
+        HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_NFC_TYPES_ADDR + i * 4, (uint32_t)cards[i].type);
     }
     
     HAL_FLASH_Lock();

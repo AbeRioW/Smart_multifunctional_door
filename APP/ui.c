@@ -7,6 +7,7 @@
 static UI_State_t currentState = UI_STATE_IDLE;
 static uint8_t selectedType = 0;  // 选择的卡片类型
 static uint8_t displayPage = 0;    // 显示页码
+static uint8_t selectedMode = 0;   // 选择的解锁模式
 
 // 按键映射为数字
 // KEY1-3 -> 1-3
@@ -32,13 +33,19 @@ static uint8_t KeyToNumber(uint8_t key)
 }
 
 // 显示空闲状态界面
-static void DisplayIdle(void)
+static void DisplayIdleInternal(void)
 {
     OLED_Clear();
     OLED_ShowString(0, 0, (uint8_t*)"Smart Door", 8, 1);
     OLED_ShowString(0, 16, (uint8_t*)"KEY8:Reg NFC", 8, 1);
     OLED_ShowString(0, 32, (uint8_t*)"KEY12:List NFC", 8, 1);
     OLED_Refresh();
+}
+
+// 显示主界面
+void UI_DisplayIdle(void)
+{
+    DisplayIdleInternal();
 }
 
 // 显示选择卡片类型界面
@@ -141,13 +148,93 @@ static void DisplayCardList(void)
     OLED_Refresh();
 }
 
-// 初始化UI
+// 显示解锁模式选择界面
+static void DisplaySelectMode(void)
+{
+    OLED_Clear();
+    OLED_ShowString(0, 0, (uint8_t*)"Select Mode:", 8, 1);
+    OLED_ShowString(0, 16, (uint8_t*)"1.Password", 8, 1);
+    OLED_ShowString(0, 32, (uint8_t*)"2.Fingerprint", 8, 1);
+    
+    // 显示当前选择
+    if(selectedMode == 1)
+    {
+        OLED_ShowString(104, 16, (uint8_t*)"<-", 8, 1);
+    }
+    else if(selectedMode == 2)
+    {
+        OLED_ShowString(104, 32, (uint8_t*)"<-", 8, 1);
+    }
+    
+    OLED_Refresh();
+}
+
+// 检查是否有两个NFC卡已注册
+uint8_t UI_CheckTwoCards(void)
+{
+    NFC_CardInfo cards[MAX_NFC_IDS];
+    uint8_t count = Flash_ReadNFCIDs(cards);
+    
+    // 检查是否至少有开门卡和权限卡各一张
+    uint8_t hasDoor = 0, hasPermission = 0;
+    for(uint8_t i = 0; i < count; i++)
+    {
+        if(cards[i].type == NFC_TYPE_DOOR) hasDoor = 1;
+        if(cards[i].type == NFC_TYPE_PERMISSION) hasPermission = 1;
+    }
+    
+    return (hasDoor && hasPermission) ? 1 : 0;
+}
+
+// 调试显示Flash中存储的卡片信息
+void UI_DebugShowCards(void)
+{
+    OLED_Clear();
+    OLED_ShowString(0, 0, (uint8_t*)"Flash Cards:", 8, 1);
+    
+    NFC_CardInfo cards[MAX_NFC_IDS];
+    uint8_t count = Flash_ReadNFCIDs(cards);
+    
+    if(count == 0)
+    {
+        OLED_ShowString(0, 16, (uint8_t*)"No cards!", 8, 1);
+    }
+    else
+    {
+        for(uint8_t i = 0; i < count && i < 3; i++)
+        {
+            uint8_t y = 16 + i * 16;
+            OLED_ShowNum(0, y, i+1, 1, 8, 1);
+            OLED_ShowString(8, y, (uint8_t*)":", 8, 1);
+            OLED_ShowNum(16, y, cards[i].type, 1, 8, 1);
+        }
+    }
+    OLED_Refresh();
+    HAL_Delay(3000);
+}
+
+// 进入解锁模式选择页面
+void UI_EnterSelectMode(void)
+{
+    currentState = UI_STATE_SELECT_MODE;
+    selectedMode = 0;
+    DisplaySelectMode();
+}
+
+// 初始化UI（不显示界面）
 void UI_Init(void)
 {
     currentState = UI_STATE_IDLE;
     selectedType = 0;
     displayPage = 0;
-    DisplayIdle();
+    selectedMode = 0;
+}
+
+// 初始化UI并显示默认界面
+void UI_InitWithDisplay(void)
+{
+    UI_Init();
+    DisplayIdleInternal();
 }
 
 // 处理按键输入
@@ -199,7 +286,7 @@ void UI_HandleKey(uint8_t key)
             else if(key == 8) // 返回键
             {
                 currentState = UI_STATE_IDLE;
-                DisplayIdle();
+                DisplayIdleInternal();
             }
             break;
         }
@@ -209,7 +296,7 @@ void UI_HandleKey(uint8_t key)
             if(key == 8) // 返回键
             {
                 currentState = UI_STATE_IDLE;
-                DisplayIdle();
+                DisplayIdleInternal();
             }
             break;
         }
@@ -239,7 +326,29 @@ void UI_HandleKey(uint8_t key)
             else if(key == 8) // 返回键
             {
                 currentState = UI_STATE_IDLE;
-                DisplayIdle();
+                DisplayIdleInternal();
+            }
+            break;
+        }
+        
+        case UI_STATE_SELECT_MODE:
+        {
+            uint8_t num = KeyToNumber(key);
+            
+            if(num == 1)
+            {
+                selectedMode = 1;
+                DisplaySelectMode();
+            }
+            else if(num == 2)
+            {
+                selectedMode = 2;
+                DisplaySelectMode();
+            }
+            else if(key == 8) // 返回键
+            {
+                currentState = UI_STATE_IDLE;
+                DisplayIdleInternal();
             }
             break;
         }
@@ -303,7 +412,7 @@ void UI_Process(void)
                 // 等待返回
                 HAL_Delay(2000);
                 currentState = UI_STATE_IDLE;
-                DisplayIdle();
+                DisplayIdleInternal();
             }
         }
     }

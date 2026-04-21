@@ -143,7 +143,24 @@ int main(void)
   /* USER CODE BEGIN 2 */
   OLED_Init();
   Flash_Init();
+  
+  // 初始化UI（不显示界面）
   UI_Init();
+  
+  // 调试：显示Flash中存储的卡片信息
+  UI_DebugShowCards();
+  
+  // 检查是否有两个NFC卡已注册，如果有直接进入选择模式
+  if(UI_CheckTwoCards())
+  {
+    UI_EnterSelectMode();
+  }
+  else
+  {
+    // 否则显示主菜单
+    UI_DisplayIdle();
+  }
+  
   PCD_Init();
   AS608_Init();
   /* USER CODE END 2 */
