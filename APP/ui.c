@@ -603,11 +603,16 @@ void UI_HandleKey(uint8_t key)
             }
             else if(key == 16 && passwordIndex == 4) // 确定键
             {
-                // 检查密码是否正确（默认4个0）
+                // 从Flash读取存储的密码
+                uint8_t storedPin[4];
+                Flash_ReadPIN(storedPin);
+                
+                // 检查输入的密码是否与存储的密码匹配
+                // 输入的password是数字(0-9)，存储的是ASCII码('0'=0x30)
                 uint8_t correct = 1;
                 for(uint8_t i = 0; i < 4; i++)
                 {
-                    if(password[i] != 0)
+                    if(password[i] != (storedPin[i] - '0'))
                     {
                         correct = 0;
                         break;
@@ -736,8 +741,13 @@ void UI_HandleKey(uint8_t key)
                 OLED_Clear();
                 if(match)
                 {
-                    // 保存新密码
-                    Flash_WritePIN(newPassword);
+                    // 将数字密码转换为ASCII码后保存
+                    uint8_t pinAscii[4];
+                    for(uint8_t i = 0; i < 4; i++)
+                    {
+                        pinAscii[i] = newPassword[i] + '0';
+                    }
+                    Flash_WritePIN(pinAscii);
                     OLED_ShowString(0, 16, (uint8_t*)"PIN Changed!", 8, 1);
                 }
                 else
