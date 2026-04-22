@@ -3,7 +3,7 @@
 <title>Static Call Graph - [Smart_multifunctional_door\Smart_multifunctional_door.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image Smart_multifunctional_door\Smart_multifunctional_door.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed Apr 22 11:33:15 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed Apr 22 11:40:27 2026
 <BR><P>
 <H3>Maximum Stack Usage =        536 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -625,7 +625,7 @@ Global Symbols
 <LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_DebugShowCards
 <LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AS608_Init
 <LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelay
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 <LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AS608_ReceivePacket
 <LI><a href="#[b8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCD_Reset
 </UL>
@@ -689,7 +689,7 @@ Global Symbols
 <LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_WaitAck
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_Stop
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_Start
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelay
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 <LI><a href="#[b8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCD_Reset
 <LI><a href="#[a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MFRC_WriteReg
 <LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MFRC_ReadReg
@@ -1062,7 +1062,7 @@ Global Symbols
 <LI><a href="#[c5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_HandleKey
 <LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_DebugShowCards
 <LI><a href="#[ae]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLED_Init
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelay
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 <LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectType
 <LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectMode
 <LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplayScanNFC
@@ -1109,7 +1109,7 @@ Global Symbols
 <LI><a href="#[c5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_HandleKey
 <LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_DebugShowCards
 <LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLED_Clear
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelay
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 <LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectType
 <LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectMode
 <LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplayScanNFC
@@ -1151,6 +1151,7 @@ Global Symbols
 <LI><a href="#[b3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLED_Pow
 </UL>
 <BR>[Called By]<UL><LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_DebugShowCards
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 <LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplayPasswordInput
 <LI><a href="#[6b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplayModifyPin
 <LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplayEnrollFinger
@@ -1167,7 +1168,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_Process
 <LI><a href="#[c5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_HandleKey
 <LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_DebugShowCards
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelay
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 <LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectType
 <LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectMode
 <LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplayScanNFC
@@ -1347,10 +1348,10 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectMode
 </UL>
 <BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelay
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 </UL>
 
-<P><STRONG><a name="[c5]"></a>UI_HandleKey</STRONG> (Thumb, 1560 bytes, Stack size 120 bytes, ui.o(i.UI_HandleKey))
+<P><STRONG><a name="[c5]"></a>UI_HandleKey</STRONG> (Thumb, 1564 bytes, Stack size 120 bytes, ui.o(i.UI_HandleKey))
 <BR><BR>[Stack]<UL><LI>Max Depth = 512<LI>Call Chain = UI_HandleKey &rArr; AS608_StoreChar &rArr; AS608_SendCommand &rArr; HAL_UART_Transmit &rArr; UART_WaitOnFlagUntilTimeout
 </UL>
 <BR>[Calls]<UL><LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
@@ -1363,7 +1364,7 @@ Global Symbols
 <LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Flash_RemoveNFCID
 <LI><a href="#[c7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Flash_ReadPIN
 <LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Flash_ReadNFCIDs
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelay
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 <LI><a href="#[c6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;KeyToNumber
 <LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectType
 <LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplaySelectMode
@@ -1389,7 +1390,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[c9]"></a>UI_Process</STRONG> (Thumb, 418 bytes, Stack size 112 bytes, ui.o(i.UI_Process))
+<P><STRONG><a name="[c9]"></a>UI_Process</STRONG> (Thumb, 422 bytes, Stack size 112 bytes, ui.o(i.UI_Process))
 <BR><BR>[Stack]<UL><LI>Max Depth = 536<LI>Call Chain = UI_Process &rArr; AS608_VerifyFinger &rArr; AS608_Search &rArr; AS608_SendCommand &rArr; HAL_UART_Transmit &rArr; UART_WaitOnFlagUntilTimeout
 </UL>
 <BR>[Calls]<UL><LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
@@ -1399,7 +1400,7 @@ Global Symbols
 <LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLED_Clear
 <LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Flash_ReadNFCIDs
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Flash_AddNFCID
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelay
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_TriggerRelayWithWelcome
 <LI><a href="#[c3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_EnterAdminMode
 <LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisplayIdleInternal
 <LI><a href="#[5e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AS608_VerifyFinger
@@ -1409,13 +1410,14 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[c8]"></a>UI_TriggerRelay</STRONG> (Thumb, 88 bytes, Stack size 24 bytes, ui.o(i.UI_TriggerRelay))
-<BR><BR>[Stack]<UL><LI>Max Depth = 124<LI>Call Chain = UI_TriggerRelay &rArr; UI_EnterSelectMode &rArr; DisplaySelectMode &rArr; OLED_ShowString &rArr; OLED_ShowChar &rArr; OLED_DrawPoint
+<P><STRONG><a name="[c8]"></a>UI_TriggerRelayWithWelcome</STRONG> (Thumb, 178 bytes, Stack size 32 bytes, ui.o(i.UI_TriggerRelayWithWelcome))
+<BR><BR>[Stack]<UL><LI>Max Depth = 132<LI>Call Chain = UI_TriggerRelayWithWelcome &rArr; UI_EnterSelectMode &rArr; DisplaySelectMode &rArr; OLED_ShowString &rArr; OLED_ShowChar &rArr; OLED_DrawPoint
 </UL>
 <BR>[Calls]<UL><LI><a href="#[c4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UI_EnterSelectMode
 <LI><a href="#[9e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
 <LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLED_ShowString
+<LI><a href="#[65]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLED_ShowNum
 <LI><a href="#[62]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLED_Refresh
 <LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLED_Clear
 </UL>

@@ -217,42 +217,80 @@ static void DisplayFingerprintScan(void)
     OLED_Refresh();
 }
 
-// 控制继电器：ON-3秒后自动OFF
-void UI_TriggerRelay(void)
+// 解锁方式枚举
+typedef enum {
+    UNLOCK_BY_NFC = 0,      // NFC卡解锁
+    UNLOCK_BY_PIN,          // PIN码解锁
+    UNLOCK_BY_FINGERPRINT   // 指纹解锁
+} UnlockMethod_t;
+
+// 控制继电器：ON-3秒后自动OFF，显示欢迎信息
+// method: 解锁方式
+// id: 指纹ID或卡片ID（仅用于显示）
+void UI_TriggerRelayWithWelcome(UnlockMethod_t method, uint16_t id)
 {
     // 拉高继电器
     HAL_GPIO_WritePin(LAY_GPIO_Port, LAY_Pin, GPIO_PIN_SET);
-    
-    // 显示yes
+
+    // 显示Welcome和解锁信息
     OLED_Clear();
-    OLED_ShowString(0, 16, (uint8_t*)"     yes     ", 8, 1);
+    OLED_ShowString(0, 0, (uint8_t*)"   Welcome!   ", 8, 1);
+
+    switch(method)
+    {
+        case UNLOCK_BY_NFC:
+            OLED_ShowString(0, 24, (uint8_t*)"Unlock: NFC", 8, 1);
+            break;
+        case UNLOCK_BY_PIN:
+            OLED_ShowString(0, 24, (uint8_t*)"Unlock: PIN", 8, 1);
+            break;
+        case UNLOCK_BY_FINGERPRINT:
+            OLED_ShowString(0, 24, (uint8_t*)"Unlock: Finger", 8, 1);
+            OLED_ShowString(0, 40, (uint8_t*)"ID:", 8, 1);
+            OLED_ShowNum(32, 40, id, 3, 8, 1);
+            break;
+    }
     OLED_Refresh();
-    
+
     // 等待3秒
     HAL_Delay(3000);
-    
+
     // 拉低继电器
     HAL_GPIO_WritePin(LAY_GPIO_Port, LAY_Pin, GPIO_PIN_RESET);
-    
+
     // 重置密码输入状态
     passwordIndex = 0;
     for(uint8_t i = 0; i < 4; i++)
     {
         password[i] = 0;
     }
-    
+
     // 重新进入选择模式
     UI_EnterSelectMode();
-    
+
     // 设置卡片检测标志，防止卡片仍然在天线范围内时立即再次触发
     cardDetectedFlag = 1;
 }
 
-// 显示Door Card yes界面
-static void DisplayDoorCardYes(void)
+// 显示Door Card解锁成功界面
+static void DisplayDoorCardSuccess(void)
 {
-    // 触发继电器
-    UI_TriggerRelay();
+    // 触发继电器，显示Welcome
+    UI_TriggerRelayWithWelcome(UNLOCK_BY_NFC, 0);
+}
+
+// 显示PIN码解锁成功界面
+static void DisplayPinSuccess(void)
+{
+    // 触发继电器，显示Welcome
+    UI_TriggerRelayWithWelcome(UNLOCK_BY_PIN, 0);
+}
+
+// 显示指纹解锁成功界面
+static void DisplayFingerprintSuccess(uint16_t fingerID)
+{
+    // 触发继电器，显示Welcome和指纹ID
+    UI_TriggerRelayWithWelcome(UNLOCK_BY_FINGERPRINT, fingerID);
 }
 
 // 显示后台管理菜单界面
@@ -672,8 +710,7 @@ void UI_HandleKey(uint8_t key)
                 
                 if(correct)
                 {
-                    currentState = UI_STATE_DOOR_CARD_YES;
-                    DisplayDoorCardYes();
+                    DisplayPinSuccess();
                 }
                 else
                 {
@@ -702,7 +739,7 @@ void UI_HandleKey(uint8_t key)
         
         case UI_STATE_DOOR_CARD_YES:
         {
-            // 正在显示yes，等待继电器完成，忽略按键
+            // 正在显示欢迎界面，等待继电器完成，忽略按键
             break;
         }
         
@@ -1095,7 +1132,7 @@ void UI_HandleKey(uint8_t key)
 // UI主循环处理函数
 void UI_Process(void)
 {
-    // 如果是显示yes状态，直接返回，不做任何处理
+    // 如果是显示欢迎界面状态，直接返回，不做任何处理
     if(currentState == UI_STATE_DOOR_CARD_YES)
     {
         return;
@@ -1164,9 +1201,8 @@ void UI_Process(void)
         
         if(result == AS608_ACK_OK)
         {
-            // 指纹识别成功
-            currentState = UI_STATE_DOOR_CARD_YES;
-            DisplayDoorCardYes();
+            // 指纹识别成功，显示Welcome和指纹ID
+            DisplayFingerprintSuccess(pageID);
         }
     }
     else if(currentState == UI_STATE_SELECT_MODE || currentState == UI_STATE_PASSWORD_INPUT)
@@ -1200,10 +1236,9 @@ void UI_Process(void)
                     {
                         if(cards[i].id == id && cards[i].type == NFC_TYPE_DOOR)
                         {
-                            // 找到Door Card
+                            // 找到Door Card，显示Welcome
                             cardDetectedFlag = 1; // 设置标志，避免持续检测
-                            currentState = UI_STATE_DOOR_CARD_YES;
-                            DisplayDoorCardYes();
+                            DisplayDoorCardSuccess();
                             return; // 立即返回，避免继续执行后续代码
                         }
                         else if(cards[i].id == id && cards[i].type == NFC_TYPE_PERMISSION)
