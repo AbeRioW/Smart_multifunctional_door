@@ -156,6 +156,9 @@ int main(void)
   // 初始化串口接收中断
   UI_InitUartRx();
 
+  // 初始化SG90舵机
+  UI_InitServo();
+
   // 调试：显示Flash中存储的卡片信息
   UI_DebugShowCards();
   

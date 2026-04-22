@@ -51,6 +51,17 @@ static uint8_t uartRxComplete = 0;
 static uint8_t uartUnlockFailCount = 0;  // 串口解锁失败计数
 static uint8_t uartConnected = 0;        // 蓝牙连接状态
 
+// SG90舵机相关变量
+// TIM2 Period = 19999, 50Hz (20ms周期)
+// 0.5ms = 0.5/20 * 20000 = 500 (0度)
+// 1.5ms = 1.5/20 * 20000 = 1500 (90度)
+// 2.5ms = 2.5/20 * 20000 = 2500 (180度)
+#define SERVO_MIN_PULSE 500    // 0.5ms对应0度
+#define SERVO_MAX_PULSE 2500   // 2.5ms对应180度
+#define SERVO_MID_PULSE 1500   // 1.5ms对应90度
+#define LIGHT_THRESHOLD 500    // 光照阈值，低于此值触发舵机
+static uint8_t servoActivated = 0;  // 舵机是否已触发
+
 // 按键映射为数字
 // KEY1-3 -> 1-3
 // KEY5-7 -> 4-6
@@ -281,19 +292,19 @@ static void UI_SetLEDBrightness(uint16_t lightValue)
 
     // 计算PWM占空比 - 5档调节
     // 光照值范围: 0-4095
-    // PWM占空比范围: 0-1000 (对应0-100%)
+    // PWM占空比范围: 0-19999 (对应0-100%)
     // 环境越暗(lightValue小)，LED越亮(PWM占空比大)
 
     uint16_t pwmDuty;
 
     if(lightValue < 800)        // 很暗
-        pwmDuty = 1000;          // 100%占空比 = LED最亮
+        pwmDuty = 19999;         // 100%占空比 = LED最亮
     else if(lightValue < 1600)  // 较暗
-        pwmDuty = 800;           // 80%占空比 = LED较亮
+        pwmDuty = 16000;         // 80%占空比 = LED较亮
     else if(lightValue < 2400)  // 正常
-        pwmDuty = 600;           // 60%占空比 = LED中等
+        pwmDuty = 12000;         // 60%占空比 = LED中等
     else if(lightValue < 3200)  // 较亮
-        pwmDuty = 300;           // 30%占空比 = LED较暗
+        pwmDuty = 6000;          // 30%占空比 = LED较暗
     else                        // 很亮
         pwmDuty = 0;             // 0%占空比 = LED最暗（接近关闭）
 
@@ -303,7 +314,7 @@ static void UI_SetLEDBrightness(uint16_t lightValue)
 // 关闭LED（PWM输出100%，LED负极接高电平，LED灭）
 static void UI_TurnOffLED(void)
 {
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1000); // 100%占空比 = LED灭
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 19999); // 100%占空比 = LED灭
     HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
 }
 
@@ -312,7 +323,55 @@ void UI_InitLED(void)
 {
     // 启动PWM并设置为100%占空比（LED灭）
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1000);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 19999);
+}
+
+// 初始化SG90舵机（TIM2_CH2）
+void UI_InitServo(void)
+{
+    // 启动TIM2_CH2 PWM
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+    // 初始位置0度
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, SERVO_MIN_PULSE);
+    servoActivated = 0;
+}
+
+// 设置SG90舵机角度
+// angle: 0-180度
+static void UI_SetServoAngle(uint8_t angle)
+{
+    if(angle > 180) angle = 180;
+    
+    // 计算PWM占空比
+    // 0度 = 0.5ms脉冲 = 50/2000 * 100% = 2.5%占空比
+    // 180度 = 2.5ms脉冲 = 250/2000 * 100% = 12.5%占空比
+    uint16_t pulse = SERVO_MIN_PULSE + (angle * (SERVO_MAX_PULSE - SERVO_MIN_PULSE) / 180);
+    
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pulse);
+}
+
+// 根据光照值控制舵机
+// lightValue: 0-4095，光照值越大表示环境越亮
+static void UI_ControlServoByLight(uint16_t lightValue)
+{
+    if(lightValue > LIGHT_THRESHOLD)
+    {
+        // 光照过亮，转动到90度
+        if(!servoActivated)
+        {
+            UI_SetServoAngle(90);
+            servoActivated = 1;
+        }
+    }
+    else
+    {
+        // 光照正常，回到0度
+        if(servoActivated)
+        {
+            UI_SetServoAngle(0);
+            servoActivated = 0;
+        }
+    }
 }
 
 // 发送解锁失败警告到串口2（蓝牙模块）
@@ -412,6 +471,8 @@ static void UI_ProcessUnlockState(void)
         lastLedAdjustTime = currentTime;
         uint16_t lightValue = UI_ReadLightValue();
         UI_SetLEDBrightness(lightValue);
+        // 根据光照值控制舵机
+        UI_ControlServoByLight(lightValue);
     }
 
     // 3秒后关闭继电器，但继续动态调节LED

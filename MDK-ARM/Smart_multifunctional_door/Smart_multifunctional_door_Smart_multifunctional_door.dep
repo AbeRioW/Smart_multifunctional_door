@@ -1,7 +1,7 @@
 Dependencies for Project 'Smart_multifunctional_door', Target 'Smart_multifunctional_door': (DO NOT MODIFY !)
 CompilerVersion: 5060750::V5.06 update 6 (build 750)::.\ARMCC
-F (startup_stm32f103xb.s)(0x69E86B29)(--cpu Cortex-M3 -g --apcs=interwork -I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include--pd "__UVISION_VERSION SETA 538" --pd "_RTE_ SETA 1" --pd "STM32F10X_MD SETA 1" --pd "_RTE_ SETA 1"--list startup_stm32f103xb.lst --xref -o smart_multifunctional_door\startup_stm32f103xb.o --depend smart_multifunctional_door\startup_stm32f103xb.d)
-F (../Core/Src/main.c)(0x69E875C6)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../App-I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o smart_multifunctional_door\main.o --omf_browse smart_multifunctional_door\main.crf --depend smart_multifunctional_door\main.d)
+F (startup_stm32f103xb.s)(0x69E879A8)(--cpu Cortex-M3 -g --apcs=interwork -I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include--pd "__UVISION_VERSION SETA 538" --pd "_RTE_ SETA 1" --pd "STM32F10X_MD SETA 1" --pd "_RTE_ SETA 1"--list startup_stm32f103xb.lst --xref -o smart_multifunctional_door\startup_stm32f103xb.o --depend smart_multifunctional_door\startup_stm32f103xb.d)
+F (../Core/Src/main.c)(0x69E87AFC)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../App-I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o smart_multifunctional_door\main.o --omf_browse smart_multifunctional_door\main.crf --depend smart_multifunctional_door\main.d)
 I (../Core/Inc/main.h)(0x69E82AD3)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x699D411B)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x69E844D4)
@@ -43,7 +43,7 @@ I (../App/RC522.h)(0x69E82AD3)
 I (../App/AS608.h)(0x69E82AD3)
 I (D:\Program Files\KEIL5\ARM\ARMCC\include\string.h)(0x5D9B3488)
 I (D:\Program Files\KEIL5\ARM\ARMCC\include\stdio.h)(0x5D9B348A)
-I (../App/ui.h)(0x69E8758B)
+I (../App/ui.h)(0x69E87B27)
 I (../App/flash.h)(0x69E82AD3)
 F (../Core/Src/gpio.c)(0x69E82AD3)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../App-I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o smart_multifunctional_door\gpio.o --omf_browse smart_multifunctional_door\gpio.crf --depend smart_multifunctional_door\gpio.d)
 I (../Core/Inc/gpio.h)(0x69E82AD3)
@@ -144,7 +144,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h)(0x699D411B)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x699D411B)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x699D411B)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x699D411B)
-F (../Core/Src/tim.c)(0x69E869FC)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../App-I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o smart_multifunctional_door\tim.o --omf_browse smart_multifunctional_door\tim.crf --depend smart_multifunctional_door\tim.d)
+F (../Core/Src/tim.c)(0x69E87C82)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../App-I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o smart_multifunctional_door\tim.o --omf_browse smart_multifunctional_door\tim.crf --depend smart_multifunctional_door\tim.d)
 I (../Core/Inc/tim.h)(0x69E84561)
 I (../Core/Inc/main.h)(0x69E82AD3)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x699D411B)
@@ -946,8 +946,8 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x699D411B)
 I (../Core/Inc/usart.h)(0x69E86B28)
 I (D:\Program Files\KEIL5\ARM\ARMCC\include\string.h)(0x5D9B3488)
 I (D:\Program Files\KEIL5\ARM\ARMCC\include\stdio.h)(0x5D9B348A)
-F (..\APP\ui.c)(0x69E878B3)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../App-I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o smart_multifunctional_door\ui.o --omf_browse smart_multifunctional_door\ui.crf --depend smart_multifunctional_door\ui.d)
-I (..\APP\ui.h)(0x69E8758B)
+F (..\APP\ui.c)(0x69E87DCD)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../App-I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o smart_multifunctional_door\ui.o --omf_browse smart_multifunctional_door\ui.crf --depend smart_multifunctional_door\ui.d)
+I (..\APP\ui.h)(0x69E87B27)
 I (../Core/Inc/main.h)(0x69E82AD3)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x699D411B)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x69E844D4)
@@ -990,7 +990,7 @@ I (D:\Program Files\KEIL5\ARM\ARMCC\include\string.h)(0x5D9B3488)
 I (D:\Program Files\KEIL5\ARM\ARMCC\include\stdio.h)(0x5D9B348A)
 I (../Core/Inc/adc.h)(0x69E844D4)
 I (../Core/Inc/tim.h)(0x69E84561)
-F (..\APP\ui.h)(0x69E8758B)()
+F (..\APP\ui.h)(0x69E87B27)()
 F (..\APP\flash.c)(0x69E82AD3)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../App-I.\RTE\_Smart_multifunctional_door-IC:\Users\ypwan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\ypwan\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o smart_multifunctional_door\flash.o --omf_browse smart_multifunctional_door\flash.crf --depend smart_multifunctional_door\flash.d)
 I (..\APP\flash.h)(0x69E82AD3)
 I (../Core/Inc/main.h)(0x69E82AD3)

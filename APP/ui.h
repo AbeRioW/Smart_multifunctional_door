@@ -69,4 +69,7 @@ void UI_InitUartRx(void);
 // 串口中断回调函数 - 接收完成处理
 void UI_HandleUartRx(void);
 
+// 初始化SG90舵机
+void UI_InitServo(void);
+
 #endif /* __UI_H__ */
