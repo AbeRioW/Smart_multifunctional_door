@@ -329,11 +329,36 @@ static void DisplayEnrollFinger(void)
 {
     OLED_Clear();
     OLED_ShowString(0, 0, (uint8_t*)"Enroll Fingerprint", 8, 1);
-    OLED_ShowString(0, 16, (uint8_t*)"ID:", 8, 1);
-    OLED_ShowNum(24, 16, selectedFingerID, 3, 8, 1);
-    OLED_ShowString(0, 32, (uint8_t*)"Place finger...", 8, 1);
-    OLED_ShowString(0, 48, (uint8_t*)"KEY16:Start", 8, 1);
-    OLED_ShowString(0, 56, (uint8_t*)"KEY8:Back", 8, 1);
+
+    // 显示 1-8 对应 ID 0-7，两列布局
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        uint8_t y = 16 + i * 10;
+        
+        // 左列: 1-4 对应 ID 0-3
+        OLED_ShowNum(0, y, i + 1, 1, 8, 1);
+        OLED_ShowString(8, y, (uint8_t*)".ID:", 8, 1);
+        OLED_ShowNum(32, y, i, 1, 8, 1);
+        
+        // 如果选中，显示箭头
+        if(selectedFingerID == i)
+        {
+            OLED_ShowString(48, y, (uint8_t*)"<", 8, 1);
+        }
+        
+        // 右列: 5-8 对应 ID 4-7
+        OLED_ShowNum(64, y, i + 5, 1, 8, 1);
+        OLED_ShowString(72, y, (uint8_t*)".ID:", 8, 1);
+        OLED_ShowNum(96, y, i + 4, 1, 8, 1);
+        
+        // 如果选中，显示箭头
+        if(selectedFingerID == i + 4)
+        {
+            OLED_ShowString(112, y, (uint8_t*)"<", 8, 1);
+        }
+    }
+
+    OLED_ShowString(0, 56, (uint8_t*)"KEY16:Start KEY8:Back", 8, 1);
     OLED_Refresh();
 }
 
@@ -342,10 +367,36 @@ static void DisplayDeleteFinger(void)
 {
     OLED_Clear();
     OLED_ShowString(0, 0, (uint8_t*)"Delete Fingerprint", 8, 1);
-    OLED_ShowString(0, 16, (uint8_t*)"ID:", 8, 1);
-    OLED_ShowNum(24, 16, selectedFingerID, 3, 8, 1);
-    OLED_ShowString(0, 40, (uint8_t*)"KEY16:Delete", 8, 1);
-    OLED_ShowString(0, 56, (uint8_t*)"KEY8:Back", 8, 1);
+
+    // 显示 1-8 对应 ID 0-7，两列布局
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        uint8_t y = 16 + i * 10;
+        
+        // 左列: 1-4 对应 ID 0-3
+        OLED_ShowNum(0, y, i + 1, 1, 8, 1);
+        OLED_ShowString(8, y, (uint8_t*)".ID:", 8, 1);
+        OLED_ShowNum(32, y, i, 1, 8, 1);
+        
+        // 如果选中，显示箭头
+        if(selectedFingerID == i)
+        {
+            OLED_ShowString(48, y, (uint8_t*)"<", 8, 1);
+        }
+        
+        // 右列: 5-8 对应 ID 4-7
+        OLED_ShowNum(64, y, i + 5, 1, 8, 1);
+        OLED_ShowString(72, y, (uint8_t*)".ID:", 8, 1);
+        OLED_ShowNum(96, y, i + 4, 1, 8, 1);
+        
+        // 如果选中，显示箭头
+        if(selectedFingerID == i + 4)
+        {
+            OLED_ShowString(112, y, (uint8_t*)"<", 8, 1);
+        }
+    }
+
+    OLED_ShowString(0, 56, (uint8_t*)"KEY16:Del KEY8:Back", 8, 1);
     OLED_Refresh();
 }
 
@@ -770,36 +821,179 @@ void UI_HandleKey(uint8_t key)
         
         case UI_STATE_ADMIN_ENROLL_FINGER:
         {
-            uint8_t num = KeyToNumber(key);
-            
-            if(num != 0xFF && num <= 9 && selectedFingerID < 100)
+            // KEY1-8 选择 ID 0-7
+            if(key >= 1 && key <= 8)
             {
-                selectedFingerID = selectedFingerID * 10 + num;
-                if(selectedFingerID > 299) selectedFingerID = 299;
+                selectedFingerID = key - 1; // KEY1=0, KEY2=1, ..., KEY8=7
                 DisplayEnrollFinger();
             }
             else if(key == 16) // 开始录入
             {
-                if(selectedFingerID < AS608_MAX_FINGER_NUM)
+                // 第一步：等待用户放置手指并按下确认
+                OLED_Clear();
+                OLED_ShowString(0, 0, (uint8_t*)"Step 1/2", 8, 1);
+                OLED_ShowString(0, 16, (uint8_t*)"Place finger...", 8, 1);
+                OLED_ShowString(0, 48, (uint8_t*)"KEY16:Confirm", 8, 1);
+                OLED_ShowString(0, 56, (uint8_t*)"KEY8:Cancel", 8, 1);
+                OLED_Refresh();
+
+                // 等待用户确认或取消
+                uint8_t waitKey = 0;
+                while(waitKey != 16 && waitKey != 8)
                 {
-                    OLED_Clear();
-                    OLED_ShowString(0, 0, (uint8_t*)"Enrolling...", 8, 1);
-                    OLED_Refresh();
-                    
-                    uint8_t result = AS608_Enroll(selectedFingerID);
-                    
-                    OLED_Clear();
+                    waitKey = Key_Scan();
+                    HAL_Delay(50);
+                }
+
+                if(waitKey == 8)
+                {
+                    // 用户取消，返回选择界面
+                    DisplayEnrollFinger();
+                    break;
+                }
+
+                // 循环等待手指放置
+                OLED_Clear();
+                OLED_ShowString(0, 0, (uint8_t*)"Step 1/2", 8, 1);
+                OLED_ShowString(0, 16, (uint8_t*)"Waiting finger...", 8, 1);
+                OLED_Refresh();
+
+                uint8_t result;
+                uint32_t startTick = HAL_GetTick();
+                while(1)
+                {
+                    result = AS608_GetImage();
                     if(result == AS608_ACK_OK)
                     {
-                        OLED_ShowString(0, 16, (uint8_t*)"Enroll Success!", 8, 1);
+                        break; // 检测到手指
                     }
-                    else
+                    // 检查是否超时（10秒）
+                    if(HAL_GetTick() - startTick > 10000)
                     {
-                        OLED_ShowString(0, 16, (uint8_t*)"Enroll Failed!", 8, 1);
+                        OLED_Clear();
+                        OLED_ShowString(0, 16, (uint8_t*)"Timeout!", 8, 1);
+                        OLED_Refresh();
+                        HAL_Delay(2000);
+                        DisplayEnrollFinger();
+                        break;
                     }
+                    HAL_Delay(100); // 100ms轮询
+                }
+
+                if(result != AS608_ACK_OK)
+                {
+                    break; // 超时退出
+                }
+
+                OLED_ShowString(0, 32, (uint8_t*)"Reading...", 8, 1);
+                OLED_Refresh();
+
+                result = AS608_GenChar(AS608_BUFFER_CHAR1);
+                if(result != AS608_ACK_OK)
+                {
+                    OLED_Clear();
+                    OLED_ShowString(0, 16, (uint8_t*)"GenChar Failed!", 8, 1);
                     OLED_Refresh();
                     HAL_Delay(2000);
+                    DisplayEnrollFinger();
+                    break;
                 }
+
+                // 第二步：等待用户再次放置手指
+                OLED_Clear();
+                OLED_ShowString(0, 0, (uint8_t*)"Step 2/2", 8, 1);
+                OLED_ShowString(0, 16, (uint8_t*)"Place again...", 8, 1);
+                OLED_ShowString(0, 48, (uint8_t*)"KEY16:Confirm", 8, 1);
+                OLED_ShowString(0, 56, (uint8_t*)"KEY8:Cancel", 8, 1);
+                OLED_Refresh();
+
+                // 等待用户确认或取消
+                waitKey = 0;
+                while(waitKey != 16 && waitKey != 8)
+                {
+                    waitKey = Key_Scan();
+                    HAL_Delay(50);
+                }
+
+                if(waitKey == 8)
+                {
+                    DisplayEnrollFinger();
+                    break;
+                }
+
+                // 循环等待手指放置
+                OLED_Clear();
+                OLED_ShowString(0, 0, (uint8_t*)"Step 2/2", 8, 1);
+                OLED_ShowString(0, 16, (uint8_t*)"Waiting finger...", 8, 1);
+                OLED_Refresh();
+
+                startTick = HAL_GetTick();
+                while(1)
+                {
+                    result = AS608_GetImage();
+                    if(result == AS608_ACK_OK)
+                    {
+                        break; // 检测到手指
+                    }
+                    // 检查是否超时（10秒）
+                    if(HAL_GetTick() - startTick > 10000)
+                    {
+                        OLED_Clear();
+                        OLED_ShowString(0, 16, (uint8_t*)"Timeout!", 8, 1);
+                        OLED_Refresh();
+                        HAL_Delay(2000);
+                        DisplayEnrollFinger();
+                        break;
+                    }
+                    HAL_Delay(100); // 100ms轮询
+                }
+
+                if(result != AS608_ACK_OK)
+                {
+                    break; // 超时退出
+                }
+
+                OLED_ShowString(0, 32, (uint8_t*)"Reading...", 8, 1);
+                OLED_Refresh();
+
+                result = AS608_GenChar(AS608_BUFFER_CHAR2);
+                if(result != AS608_ACK_OK)
+                {
+                    OLED_Clear();
+                    OLED_ShowString(0, 16, (uint8_t*)"GenChar Failed!", 8, 1);
+                    OLED_Refresh();
+                    HAL_Delay(2000);
+                    DisplayEnrollFinger();
+                    break;
+                }
+
+                // 合并模型
+                result = AS608_RegModel();
+                if(result != AS608_ACK_OK)
+                {
+                    OLED_Clear();
+                    OLED_ShowString(0, 16, (uint8_t*)"RegModel Failed!", 8, 1);
+                    OLED_Refresh();
+                    HAL_Delay(2000);
+                    DisplayEnrollFinger();
+                    break;
+                }
+
+                // 存储指纹
+                result = AS608_StoreChar(AS608_BUFFER_CHAR1, selectedFingerID);
+
+                OLED_Clear();
+                if(result == AS608_ACK_OK)
+                {
+                    OLED_ShowString(0, 16, (uint8_t*)"Enroll Success!", 8, 1);
+                }
+                else
+                {
+                    OLED_ShowString(0, 16, (uint8_t*)"Store Failed!", 8, 1);
+                }
+                OLED_Refresh();
+                HAL_Delay(2000);
+
                 currentState = UI_STATE_ADMIN_MENU;
                 DisplayAdminMenu();
             }
@@ -810,39 +1004,35 @@ void UI_HandleKey(uint8_t key)
             }
             break;
         }
-        
+
         case UI_STATE_ADMIN_DELETE_FINGER:
         {
-            uint8_t num = KeyToNumber(key);
-            
-            if(num != 0xFF && num <= 9 && selectedFingerID < 100)
+            // KEY1-8 选择 ID 0-7
+            if(key >= 1 && key <= 8)
             {
-                selectedFingerID = selectedFingerID * 10 + num;
-                if(selectedFingerID > 299) selectedFingerID = 299;
+                selectedFingerID = key - 1; // KEY1=0, KEY2=1, ..., KEY8=7
                 DisplayDeleteFinger();
             }
             else if(key == 16) // 删除指纹
             {
-                if(selectedFingerID < AS608_MAX_FINGER_NUM)
+                OLED_Clear();
+                OLED_ShowString(0, 0, (uint8_t*)"Deleting...", 8, 1);
+                OLED_Refresh();
+
+                uint8_t result = AS608_DeleteChar(selectedFingerID, 1);
+
+                OLED_Clear();
+                if(result == AS608_ACK_OK)
                 {
-                    OLED_Clear();
-                    OLED_ShowString(0, 0, (uint8_t*)"Deleting...", 8, 1);
-                    OLED_Refresh();
-                    
-                    uint8_t result = AS608_DeleteChar(selectedFingerID, 1);
-                    
-                    OLED_Clear();
-                    if(result == AS608_ACK_OK)
-                    {
-                        OLED_ShowString(0, 16, (uint8_t*)"Delete Success!", 8, 1);
-                    }
-                    else
-                    {
-                        OLED_ShowString(0, 16, (uint8_t*)"Delete Failed!", 8, 1);
-                    }
-                    OLED_Refresh();
-                    HAL_Delay(2000);
+                    OLED_ShowString(0, 16, (uint8_t*)"Delete Success!", 8, 1);
                 }
+                else
+                {
+                    OLED_ShowString(0, 16, (uint8_t*)"Delete Failed!", 8, 1);
+                }
+                OLED_Refresh();
+                HAL_Delay(2000);
+
                 currentState = UI_STATE_ADMIN_MENU;
                 DisplayAdminMenu();
             }
