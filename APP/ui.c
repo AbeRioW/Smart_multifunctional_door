@@ -3,6 +3,8 @@
 #include "RC522.h"
 #include "AS608.h"
 #include "main.h"
+#include "adc.h"
+#include "tim.h"
 #include <string.h>
 
 // 全局变量
@@ -22,6 +24,11 @@ static uint8_t confirmPassword[4];       // 确认密码
 static uint8_t confirmPasswordIndex = 0; // 确认密码输入位置
 static uint16_t selectedFingerID = 0;    // 选中的指纹ID
 static uint8_t adminCardDetectedFlag = 0; // Perm Card检测标志
+
+// LED动态调节相关变量
+static uint8_t unlockSuccessFlag = 0;    // 解锁成功标志，用于控制LED动态调节
+static uint32_t lastLedAdjustTime = 0;   // 上次LED调节时间
+static uint32_t relayStartTime = 0;      // 继电器开启时间
 
 // 按键映射为数字
 // KEY1-3 -> 1-3
@@ -224,13 +231,90 @@ typedef enum {
     UNLOCK_BY_FINGERPRINT   // 指纹解锁
 } UnlockMethod_t;
 
-// 控制继电器：ON-3秒后自动OFF，显示欢迎信息
+// 读取光照值（ADC）- 增加采样次数和延时，减少波动
+// 返回值: 0-4095 (12位ADC)
+static uint16_t UI_ReadLightValue(void)
+{
+    uint32_t sum = 0;
+    const uint8_t samples = 20; // 采样20次取平均，减少波动
+
+    for(uint8_t i = 0; i < samples; i++)
+    {
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 10);
+        sum += HAL_ADC_GetValue(&hadc1);
+        HAL_ADC_Stop(&hadc1);
+        HAL_Delay(2); // 短暂延时
+    }
+
+    return (uint16_t)(sum / samples);
+}
+
+// 根据光照值设置LED亮度（PWM）- 5档调节
+// lightValue: 0-4095，光照值越大表示环境越亮
+// LED正极接VCC，负极接PA15，所以PWM低电平有效（占空比越大LED越亮）
+static void UI_SetLEDBrightness(uint16_t lightValue)
+{
+    // 启动TIM2 PWM
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
+    // 计算PWM占空比 - 5档调节
+    // 光照值范围: 0-4095
+    // PWM占空比范围: 0-1000 (对应0-100%)
+    // 环境越暗(lightValue小)，LED越亮(PWM占空比大)
+
+    uint16_t pwmDuty;
+
+    if(lightValue < 800)        // 很暗
+        pwmDuty = 1000;          // 100%占空比 = LED最亮
+    else if(lightValue < 1600)  // 较暗
+        pwmDuty = 800;           // 80%占空比 = LED较亮
+    else if(lightValue < 2400)  // 正常
+        pwmDuty = 600;           // 60%占空比 = LED中等
+    else if(lightValue < 3200)  // 较亮
+        pwmDuty = 300;           // 30%占空比 = LED较暗
+    else                        // 很亮
+        pwmDuty = 0;             // 0%占空比 = LED最暗（接近关闭）
+
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, pwmDuty);
+}
+
+// 关闭LED（PWM输出100%，LED负极接高电平，LED灭）
+static void UI_TurnOffLED(void)
+{
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1000); // 100%占空比 = LED灭
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+}
+
+// 初始化LED（熄灭状态）
+void UI_InitLED(void)
+{
+    // 启动PWM并设置为100%占空比（LED灭）
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1000);
+}
+
+// 解锁成功后的处理（非阻塞版本）
 // method: 解锁方式
 // id: 指纹ID或卡片ID（仅用于显示）
-void UI_TriggerRelayWithWelcome(UnlockMethod_t method, uint16_t id)
+static void UI_HandleUnlockSuccess(UnlockMethod_t method, uint16_t id)
 {
+    // 如果之前已经在解锁状态，先关闭LED
+    if(unlockSuccessFlag)
+    {
+        UI_TurnOffLED();
+    }
+
     // 拉高继电器
     HAL_GPIO_WritePin(LAY_GPIO_Port, LAY_Pin, GPIO_PIN_SET);
+
+    // 设置解锁成功标志，启动LED动态调节
+    unlockSuccessFlag = 1;
+    lastLedAdjustTime = HAL_GetTick();
+
+    // 首次读取光照值并调节LED亮度
+    uint16_t lightValue = UI_ReadLightValue();
+    UI_SetLEDBrightness(lightValue);
 
     // 显示Welcome和解锁信息
     OLED_Clear();
@@ -252,24 +336,54 @@ void UI_TriggerRelayWithWelcome(UnlockMethod_t method, uint16_t id)
     }
     OLED_Refresh();
 
-    // 等待3秒
-    HAL_Delay(3000);
+    // 记录继电器开启时间
+    relayStartTime = HAL_GetTick();
+}
 
-    // 拉低继电器
-    HAL_GPIO_WritePin(LAY_GPIO_Port, LAY_Pin, GPIO_PIN_RESET);
+// 解锁成功后的状态处理（在UI_Process中调用）
+static void UI_ProcessUnlockState(void)
+{
+    uint32_t currentTime = HAL_GetTick();
 
-    // 重置密码输入状态
-    passwordIndex = 0;
-    for(uint8_t i = 0; i < 4; i++)
+    // 每3000ms（3秒）动态调节一次LED亮度，避免闪烁
+    if(currentTime - lastLedAdjustTime >= 3000)
     {
-        password[i] = 0;
+        lastLedAdjustTime = currentTime;
+        uint16_t lightValue = UI_ReadLightValue();
+        UI_SetLEDBrightness(lightValue);
     }
 
-    // 重新进入选择模式
-    UI_EnterSelectMode();
+    // 3秒后关闭继电器，但继续动态调节LED
+    if(currentTime - relayStartTime >= 3000)
+    {
+        // 拉低继电器
+        HAL_GPIO_WritePin(LAY_GPIO_Port, LAY_Pin, GPIO_PIN_RESET);
 
-    // 设置卡片检测标志，防止卡片仍然在天线范围内时立即再次触发
-    cardDetectedFlag = 1;
+        // 不关闭LED，继续动态调节
+        // 不清除unlockSuccessFlag，保持LED调节状态
+
+        // 重置密码输入状态
+        passwordIndex = 0;
+        for(uint8_t i = 0; i < 4; i++)
+        {
+            password[i] = 0;
+        }
+
+        // 重新进入选择模式
+        UI_EnterSelectMode();
+
+        // 设置卡片检测标志，防止卡片仍然在天线范围内时立即再次触发
+        cardDetectedFlag = 1;
+    }
+}
+
+// 控制继电器：ON-3秒后自动OFF，显示欢迎信息，并根据光照调节LED（旧版本，保留兼容）
+// method: 解锁方式
+// id: 指纹ID或卡片ID（仅用于显示）
+void UI_TriggerRelayWithWelcome(UnlockMethod_t method, uint16_t id)
+{
+    // 调用新的非阻塞处理函数
+    UI_HandleUnlockSuccess(method, id);
 }
 
 // 显示Door Card解锁成功界面
@@ -550,10 +664,14 @@ void UI_Init(void)
     selectedMode = 0;
     passwordIndex = 0;
     cardDetectedFlag = 0;
+    unlockSuccessFlag = 0;
     for(uint8_t i = 0; i < 4; i++)
     {
         password[i] = 0;
     }
+
+    // 初始化LED为熄灭状态
+    UI_InitLED();
 }
 
 // 初始化UI并显示默认界面
@@ -1132,6 +1250,13 @@ void UI_HandleKey(uint8_t key)
 // UI主循环处理函数
 void UI_Process(void)
 {
+    // 如果解锁成功标志置位，处理解锁状态（动态调节LED等）
+    if(unlockSuccessFlag)
+    {
+        UI_ProcessUnlockState();
+        return;
+    }
+
     // 如果是显示欢迎界面状态，直接返回，不做任何处理
     if(currentState == UI_STATE_DOOR_CARD_YES)
     {

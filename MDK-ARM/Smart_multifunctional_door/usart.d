@@ -23,10 +23,14 @@ smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1x
 smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma.h
 smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma_ex.h
 smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_cortex.h
+smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_adc.h
+smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_adc_ex.h
 smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash.h
 smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h
 smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h
+smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 smart_multifunctional_door\usart.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 smart_multifunctional_door\usart.o: ../App/AS608.h
 smart_multifunctional_door\usart.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\string.h
