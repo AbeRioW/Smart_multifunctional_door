@@ -5,7 +5,9 @@
 #include "main.h"
 #include "adc.h"
 #include "tim.h"
+#include "usart.h"
 #include <string.h>
+#include <stdio.h>
 
 // 全局变量
 static UI_State_t currentState = UI_STATE_IDLE;
@@ -29,6 +31,17 @@ static uint8_t adminCardDetectedFlag = 0; // Perm Card检测标志
 static uint8_t unlockSuccessFlag = 0;    // 解锁成功标志，用于控制LED动态调节
 static uint32_t lastLedAdjustTime = 0;   // 上次LED调节时间
 static uint32_t relayStartTime = 0;      // 继电器开启时间
+
+// 解锁失败计数相关变量
+static uint8_t unlockFailCount = 0;      // 解锁失败次数计数
+static uint32_t lastUnlockFailTime = 0;  // 上次解锁失败时间
+#define MAX_UNLOCK_FAIL_COUNT 3          // 最大解锁失败次数
+#define UNLOCK_FAIL_RESET_TIME 60000     // 60秒后重置失败计数（毫秒）
+
+// 指纹扫描相关变量
+static uint32_t lastFingerScanTime = 0;  // 上次指纹扫描时间
+#define FINGER_SCAN_INTERVAL 800         // 指纹扫描间隔800ms
+static uint8_t fingerFailCount = 0;      // 指纹连续失败计数
 
 // 按键映射为数字
 // KEY1-3 -> 1-3
@@ -292,6 +305,46 @@ void UI_InitLED(void)
     // 启动PWM并设置为100%占空比（LED灭）
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1000);
+}
+
+// 发送解锁失败警告到串口2（蓝牙模块）
+static void UI_SendUnlockFailWarning(void)
+{
+    char warningMsg[64];
+    sprintf(warningMsg, "WARNING: Unlock failed!\r\n");
+    HAL_UART_Transmit(&huart2, (uint8_t*)warningMsg, strlen(warningMsg), 100);
+}
+
+// 处理解锁失败（通用）
+// 返回：1表示达到3次失败，0表示未达到
+static uint8_t UI_HandleUnlockFail(void)
+{
+    uint32_t currentTime = HAL_GetTick();
+
+    // 检查是否需要重置计数（超过60秒）
+    if(currentTime - lastUnlockFailTime > UNLOCK_FAIL_RESET_TIME)
+    {
+        unlockFailCount = 0;
+    }
+
+    // 增加失败计数
+    unlockFailCount++;
+    lastUnlockFailTime = currentTime;
+
+    // 如果达到3次失败，发送警告并返回1
+    if(unlockFailCount >= MAX_UNLOCK_FAIL_COUNT)
+    {
+        UI_SendUnlockFailWarning();
+        unlockFailCount = 0; // 清理计数
+        return 1;
+    }
+    return 0;
+}
+
+// 重置解锁失败计数
+static void UI_ResetUnlockFailCount(void)
+{
+    unlockFailCount = 0;
 }
 
 // 解锁成功后的处理（非阻塞版本）
@@ -828,13 +881,33 @@ void UI_HandleKey(uint8_t key)
                 
                 if(correct)
                 {
+                    // 解锁成功，重置失败计数
+                    UI_ResetUnlockFailCount();
                     DisplayPinSuccess();
                 }
                 else
                 {
-                    // 密码错误，重新输入
+                    // 密码错误，OLED提示
+                    OLED_Clear();
+                    OLED_ShowString(0, 0, (uint8_t*)"PIN Verify", 8, 1);
+                    OLED_ShowString(0, 16, (uint8_t*)"Failed!", 8, 1);
+                    OLED_Refresh();
+                    HAL_Delay(1000);
+
+                    // 处理解锁失败
+                    uint8_t failResult = UI_HandleUnlockFail();
                     passwordIndex = 0;
-                    DisplayPasswordInput();
+                    if(failResult)
+                    {
+                        // 3次失败，发送警告并退出到select mode
+                        UI_SendUnlockFailWarning();
+                        currentState = UI_STATE_SELECT_MODE;
+                        DisplaySelectMode();
+                    }
+                    else
+                    {
+                        DisplayPasswordInput();
+                    }
                 }
             }
             else if(key == 8) // 返回键
@@ -1320,14 +1393,91 @@ void UI_Process(void)
     }
     else if(currentState == UI_STATE_FINGERPRINT_SCAN)
     {
-        // 指纹扫描处理
+        // 循环等待手指放置（最多10秒）
+        OLED_Clear();
+        OLED_ShowString(0, 0, (uint8_t*)"Scan Fingerprint", 8, 1);
+        OLED_ShowString(0, 16, (uint8_t*)"Place finger...", 8, 1);
+        OLED_ShowString(0, 48, (uint8_t*)"KEY8:Back", 8, 1);
+        OLED_Refresh();
+
+        uint8_t fingerDetected = 0;
+        uint32_t waitStartTime = HAL_GetTick();
+        while(HAL_GetTick() - waitStartTime < 10000) // 最多等待10秒
+        {
+            // 检查KEY8返回
+            uint8_t key = Key_Scan();
+            if(key == 8)
+            {
+                currentState = UI_STATE_SELECT_MODE;
+                DisplaySelectMode();
+                return;
+            }
+
+            // 检测手指
+            if(AS608_GetImage() == AS608_ACK_OK)
+            {
+                fingerDetected = 1;
+                break;
+            }
+            HAL_Delay(100);
+        }
+
+        if(!fingerDetected)
+        {
+            // 超时未检测到手指，算失败
+            fingerFailCount++;
+            if(fingerFailCount >= 3)
+            {
+                // 发送警告并退出
+                UI_SendUnlockFailWarning();
+                fingerFailCount = 0;
+                currentState = UI_STATE_SELECT_MODE;
+                DisplaySelectMode();
+            }
+            else
+            {
+                // 返回指纹扫描界面
+                DisplayFingerprintScan();
+            }
+            return;
+        }
+
+        // 检测到手指，进行验证
         uint16_t pageID, score;
         uint8_t result = AS608_VerifyFinger(&pageID, &score);
-        
+
         if(result == AS608_ACK_OK)
         {
-            // 指纹识别成功，显示Welcome和指纹ID
+            // 指纹识别成功
+            UI_ResetUnlockFailCount();
+            fingerFailCount = 0;
             DisplayFingerprintSuccess(pageID);
+        }
+        else
+        {
+            // 指纹识别失败
+            fingerFailCount++;
+
+            // OLED提示验证失败
+            OLED_Clear();
+            OLED_ShowString(0, 0, (uint8_t*)"Fingerprint", 8, 1);
+            OLED_ShowString(0, 16, (uint8_t*)"Verify Failed!", 8, 1);
+            OLED_Refresh();
+            HAL_Delay(1000);
+
+            if(fingerFailCount >= 3)
+            {
+                // 3次失败，发送警告并退出
+                UI_SendUnlockFailWarning();
+                fingerFailCount = 0;
+                currentState = UI_STATE_SELECT_MODE;
+                DisplaySelectMode();
+            }
+            else
+            {
+                // 返回指纹扫描界面继续等待
+                DisplayFingerprintScan();
+            }
         }
     }
     else if(currentState == UI_STATE_SELECT_MODE || currentState == UI_STATE_PASSWORD_INPUT)
@@ -1357,13 +1507,17 @@ void UI_Process(void)
                     NFC_CardInfo cards[MAX_NFC_IDS];
                     uint8_t count = Flash_ReadNFCIDs(cards);
                     
+                    uint8_t cardFound = 0;
                     for(uint8_t i = 0; i < count; i++)
                     {
                         if(cards[i].id == id && cards[i].type == NFC_TYPE_DOOR)
                         {
                             // 找到Door Card，显示Welcome
                             cardDetectedFlag = 1; // 设置标志，避免持续检测
+                            // 解锁成功，重置失败计数
+                            UI_ResetUnlockFailCount();
                             DisplayDoorCardSuccess();
+                            cardFound = 1;
                             return; // 立即返回，避免继续执行后续代码
                         }
                         else if(cards[i].id == id && cards[i].type == NFC_TYPE_PERMISSION)
@@ -1371,7 +1525,28 @@ void UI_Process(void)
                             // 找到Perm Card，进入后台管理
                             cardDetectedFlag = 1;
                             UI_EnterAdminMode();
+                            cardFound = 1;
                             return;
+                        }
+                    }
+
+                    // 如果遍历完所有卡片都没找到，说明是非法卡片
+                    if(!cardFound)
+                    {
+                        cardDetectedFlag = 1; // 设置标志，避免持续检测同一卡片
+                        // NFC解锁失败，OLED提示
+                        OLED_Clear();
+                        OLED_ShowString(0, 0, (uint8_t*)"NFC Verify", 8, 1);
+                        OLED_ShowString(0, 16, (uint8_t*)"Failed!", 8, 1);
+                        OLED_Refresh();
+                        HAL_Delay(1000);
+
+                        // 处理解锁失败
+                        uint8_t failResult = UI_HandleUnlockFail();
+                        if(failResult)
+                        {
+                            // 3次失败，发送警告
+                            UI_SendUnlockFailWarning();
                         }
                     }
                 }
