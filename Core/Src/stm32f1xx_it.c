@@ -235,23 +235,47 @@ void USART3_IRQHandler(void)
   * @param  huart: UART���
   * @retval None
   */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if (huart == &huart3)
-    {
-        if ((USART3_RX_STA & 0x8000) == 0) // ����δ���
-        {
-            if (USART3_RX_STA < USART3_MAX_RECV_LEN) // ������δ��
-            {
-                USART3_RX_STA++; // ���ճ���+1
-                // ����������һ���ֽ�
-                HAL_UART_Receive_IT(&huart3, &USART3_RX_BUF[USART3_RX_STA], 1);
-            }
-            else
-            {
-                USART3_RX_STA |= 0x8000; // ��ǽ������
-            }
-        }
-    }
-}
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+//{
+//    if (huart == &huart3)
+//    {
+//        if ((USART3_RX_STA & 0x8000) == 0) // ����δ���
+//        {
+//            if (USART3_RX_STA < USART3_MAX_RECV_LEN) // ������δ��
+//            {
+//                USART3_RX_STA++; // ���ճ���+1
+//                // ����������һ���ֽ�
+//                HAL_UART_Receive_IT(&huart3, &USART3_RX_BUF[USART3_RX_STA], 1);
+//            }
+//            else
+//            {
+//                USART3_RX_STA |= 0x8000; // ��ǽ������
+//            }
+//        }
+//    }
+//		
+//	   if(huart->Instance == USART2)
+//    {
+//        // 检查是否是结束符（回车或换行）
+//        if(uartRxBuffer[uartRxIndex] == '\r' || uartRxBuffer[uartRxIndex] == '\n')
+//        {
+//            if(uartRxIndex > 0) // 确保有数据才标记完成
+//            {
+//                uartRxComplete = 1;
+//            }
+//            uartRxIndex = 0; // 重置索引准备下次接收
+//        }
+//        else
+//        {
+//            uartRxIndex++;
+//            if(uartRxIndex >= UART_RX_BUFFER_SIZE)
+//            {
+//                uartRxIndex = 0; // 缓冲区溢出，重置
+//            }
+//        }
+
+//        // 重新启动中断接收
+//        HAL_UART_Receive_IT(&huart2, &uartRxBuffer[uartRxIndex], 1);
+//    }
+//}
 /* USER CODE END 1 */

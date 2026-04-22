@@ -63,4 +63,10 @@ void UI_Process(void);
 // 进入后台管理界面
 void UI_EnterAdminMode(void);
 
+// 初始化串口接收中断
+void UI_InitUartRx(void);
+
+// 串口中断回调函数 - 接收完成处理
+void UI_HandleUartRx(void);
+
 #endif /* __UI_H__ */

@@ -43,6 +43,14 @@ static uint32_t lastFingerScanTime = 0;  // 上次指纹扫描时间
 #define FINGER_SCAN_INTERVAL 800         // 指纹扫描间隔800ms
 static uint8_t fingerFailCount = 0;      // 指纹连续失败计数
 
+// 串口接收相关变量
+#define UART_RX_BUFFER_SIZE 32
+static uint8_t uartRxBuffer[UART_RX_BUFFER_SIZE];
+static uint8_t uartRxIndex = 0;
+static uint8_t uartRxComplete = 0;
+static uint8_t uartUnlockFailCount = 0;  // 串口解锁失败计数
+static uint8_t uartConnected = 0;        // 蓝牙连接状态
+
 // 按键映射为数字
 // KEY1-3 -> 1-3
 // KEY5-7 -> 4-6
@@ -1320,6 +1328,176 @@ void UI_HandleKey(uint8_t key)
     }
 }
 
+// 串口中断回调函数 - 接收完成处理
+void UI_HandleUartRx(void)
+{
+    if(!uartRxComplete) return;
+
+    uartRxComplete = 0;
+
+    // 验证4位PIN码
+    // 转换为数字并验证
+    uint8_t inputPin[4];
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        inputPin[i] = uartRxBuffer[i] - '0';
+    }
+
+    // 读取存储的PIN码
+    uint8_t storedPin[4];
+    Flash_ReadPIN(storedPin);
+
+    // 验证PIN码
+    uint8_t correct = 1;
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        if(inputPin[i] != (storedPin[i] - '0'))
+        {
+            correct = 0;
+            break;
+        }
+    }
+
+    if(correct)
+    {
+        // PIN码正确，解锁成功
+        uartUnlockFailCount = 0;
+        UI_ResetUnlockFailCount();
+        // 触发继电器，显示Welcome
+        UI_TriggerRelayWithWelcome(UNLOCK_BY_PIN, 0);
+        // 发送成功提示
+        HAL_UART_Transmit(&huart2, (uint8_t*)"Unlock success!\r\n", 17, 100);
+    }
+    else
+    {
+        // PIN码错误
+        uartUnlockFailCount++;
+        // OLED提示
+        OLED_Clear();
+        OLED_ShowString(0, 0, (uint8_t*)"UART PIN", 8, 1);
+        OLED_ShowString(0, 16, (uint8_t*)"Failed!", 8, 1);
+        OLED_Refresh();
+        // 发送错误提示
+        HAL_UART_Transmit(&huart2, (uint8_t*)"PIN error!\r\n", 12, 100);
+
+        // 3次失败发送报警
+        if(uartUnlockFailCount >= 3)
+        {
+            UI_SendUnlockFailWarning();
+            uartUnlockFailCount = 0;
+        }
+    }
+
+    // 清空缓冲区
+    uartRxIndex = 0;
+    memset(uartRxBuffer, 0, UART_RX_BUFFER_SIZE);
+}
+
+// 串口中断回调函数（HAL库）
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if(huart->Instance == USART2)
+    {
+        uint8_t rxData = uartRxBuffer[uartRxIndex];
+        
+        // 过滤蓝牙连接/断开的控制字符（只保留数字、回车、换行）
+        if(rxData >= '0' && rxData <= '9')
+        {
+            // 数字字符，正常接收
+            uartRxIndex++;
+            if(uartRxIndex >= UART_RX_BUFFER_SIZE)
+            {
+                uartRxIndex = 0; // 缓冲区溢出，重置
+            }
+        }
+        else if(rxData == '\r' || rxData == '\n')
+        {
+            // 结束符，检查是否是蓝牙状态消息
+            uartRxBuffer[uartRxIndex] = '\0'; // 字符串结束符
+            
+            // 检查蓝牙连接状态消息
+            if(strstr((char*)uartRxBuffer, "CONNECT OK") != NULL)
+            {
+                uartConnected = 1;
+                uartRxIndex = 0;
+                memset(uartRxBuffer, 0, UART_RX_BUFFER_SIZE);
+            }
+            else if(strstr((char*)uartRxBuffer, "DISCONNECT") != NULL)
+            {
+                uartConnected = 0;
+                uartRxIndex = 0;
+                memset(uartRxBuffer, 0, UART_RX_BUFFER_SIZE);
+            }
+            else if(uartRxIndex == 4) // 4位PIN码
+            {
+                // 检查是否全是数字
+                uint8_t allDigit = 1;
+                for(uint8_t i = 0; i < 4; i++)
+                {
+                    if(uartRxBuffer[i] < '0' || uartRxBuffer[i] > '9')
+                    {
+                        allDigit = 0;
+                        break;
+                    }
+                }
+                if(allDigit)
+                {
+                    uartRxComplete = 1;
+                }
+                else
+                {
+                    uartRxIndex = 0;
+                    memset(uartRxBuffer, 0, UART_RX_BUFFER_SIZE);
+                }
+            }
+            else
+            {
+                // 其他数据，清理缓存
+                uartRxIndex = 0;
+                memset(uartRxBuffer, 0, UART_RX_BUFFER_SIZE);
+            }
+        }
+        else
+        {
+            // 普通字符，继续接收
+            uartRxIndex++;
+            if(uartRxIndex >= UART_RX_BUFFER_SIZE)
+            {
+                uartRxIndex = 0;
+                memset(uartRxBuffer, 0, UART_RX_BUFFER_SIZE);
+            }
+        }
+
+        // 重新启动中断接收
+        HAL_UART_Receive_IT(&huart2, &uartRxBuffer[uartRxIndex], 1);
+    }
+    
+    if (huart == &huart3)
+    {
+        if ((USART3_RX_STA & 0x8000) == 0)
+        {
+            if (USART3_RX_STA < USART3_MAX_RECV_LEN)
+            {
+                USART3_RX_STA++;
+                HAL_UART_Receive_IT(&huart3, &USART3_RX_BUF[USART3_RX_STA], 1);
+            }
+            else
+            {
+                USART3_RX_STA |= 0x8000;
+            }
+        }
+    }
+}
+
+// 初始化串口接收中断
+void UI_InitUartRx(void)
+{
+    uartRxIndex = 0;
+    uartRxComplete = 0;
+    memset(uartRxBuffer, 0, UART_RX_BUFFER_SIZE);
+    HAL_UART_Receive_IT(&huart2, &uartRxBuffer[0], 1);
+}
+
 // UI主循环处理函数
 void UI_Process(void)
 {
@@ -1330,12 +1508,15 @@ void UI_Process(void)
         return;
     }
 
+    // 处理串口接收到的数据
+    UI_HandleUartRx();
+
     // 如果是显示欢迎界面状态，直接返回，不做任何处理
     if(currentState == UI_STATE_DOOR_CARD_YES)
     {
         return;
     }
-    
+
     if(currentState == UI_STATE_REGISTER_SCAN)
     {
         uint8_t status;

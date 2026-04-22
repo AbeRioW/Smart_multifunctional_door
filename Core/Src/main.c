@@ -152,7 +152,10 @@ int main(void)
   
   // 初始化UI（不显示界面）
   UI_Init();
-  
+
+  // 初始化串口接收中断
+  UI_InitUartRx();
+
   // 调试：显示Flash中存储的卡片信息
   UI_DebugShowCards();
   
