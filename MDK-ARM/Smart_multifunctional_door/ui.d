@@ -33,4 +33,7 @@ smart_multifunctional_door\ui.o: ..\APP\oled.h
 smart_multifunctional_door\ui.o: ../Core/Inc/gpio.h
 smart_multifunctional_door\ui.o: ..\APP\RC522.h
 smart_multifunctional_door\ui.o: ../Core/Inc/spi.h
+smart_multifunctional_door\ui.o: ..\APP\AS608.h
+smart_multifunctional_door\ui.o: ../Core/Inc/usart.h
 smart_multifunctional_door\ui.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+smart_multifunctional_door\ui.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h

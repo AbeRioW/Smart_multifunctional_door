@@ -1,3 +1,4 @@
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file    usart.c
@@ -50,9 +51,9 @@ void MX_USART3_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
-  // Çå³ý½ÓÊÕ»º³åÇø
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½ï¿½
   __HAL_UART_FLUSH_DRREGISTER(&huart3);
-	  // ÆôÓÃ½ÓÊÕÖÐ¶Ï
+	  // ï¿½ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
   HAL_UART_Receive_IT(&huart3, &USART3_RX_BUF[0], 1);
   /* USER CODE END USART3_Init 2 */
 

@@ -141,6 +141,7 @@ int main(void)
   MX_SPI1_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+	  HAL_GPIO_WritePin(GPIOB, LAY_Pin, GPIO_PIN_RESET);
   OLED_Init();
   Flash_Init();
   

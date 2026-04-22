@@ -10,7 +10,10 @@ typedef enum {
     UI_STATE_REGISTER_TYPE,    // 选择卡片类型
     UI_STATE_REGISTER_SCAN,    // 扫描NFC卡片
     UI_STATE_DISPLAY_LIST,     // 显示卡片列表
-    UI_STATE_SELECT_MODE       // 选择解锁模式
+    UI_STATE_SELECT_MODE,      // 选择解锁模式
+    UI_STATE_PASSWORD_INPUT,   // 密码输入界面
+    UI_STATE_FINGERPRINT_SCAN, // 指纹扫描界面
+    UI_STATE_DOOR_CARD_YES     // 显示Door Card yes界面
 } UI_State_t;
 
 // 检查是否有两个NFC卡已注册
@@ -30,6 +33,9 @@ void UI_DisplayIdle(void);
 
 // 调试显示Flash中存储的卡片信息
 void UI_DebugShowCards(void);
+
+// 控制继电器：ON-3秒后自动OFF
+void UI_TriggerRelay(void);
 
 // 处理按键输入
 // key: 按键编号 (1-16)
