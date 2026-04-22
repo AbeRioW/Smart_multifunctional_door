@@ -14,6 +14,15 @@ static uint8_t password[4];        // 输入的密码
 static uint8_t passwordIndex = 0;  // 密码输入位置
 static uint8_t cardDetectedFlag = 0; // Door Card检测标志：避免持续检测同一卡片
 
+// 后台管理相关变量
+static Admin_Menu_t adminMenuIndex = 0;  // 当前选中的菜单项
+static uint8_t newPassword[4];           // 新密码
+static uint8_t newPasswordIndex = 0;     // 新密码输入位置
+static uint8_t confirmPassword[4];       // 确认密码
+static uint8_t confirmPasswordIndex = 0; // 确认密码输入位置
+static uint16_t selectedFingerID = 0;    // 选中的指纹ID
+static uint8_t adminCardDetectedFlag = 0; // Perm Card检测标志
+
 // 按键映射为数字
 // KEY1-3 -> 1-3
 // KEY5-7 -> 4-6
@@ -244,6 +253,151 @@ static void DisplayDoorCardYes(void)
 {
     // 触发继电器
     UI_TriggerRelay();
+}
+
+// 显示后台管理菜单界面
+static void DisplayAdminMenu(void)
+{
+    OLED_Clear();
+    OLED_ShowString(0, 0, (uint8_t*)"Admin Menu:", 8, 1);
+    OLED_ShowString(0, 8, (uint8_t*)"1.Modify PIN", 8, 1);
+    OLED_ShowString(0, 16, (uint8_t*)"2.Enroll FP", 8, 1);
+    OLED_ShowString(0, 24, (uint8_t*)"3.Delete FP", 8, 1);
+    OLED_ShowString(0, 32, (uint8_t*)"4.Del NFC", 8, 1);
+    OLED_ShowString(0, 40, (uint8_t*)"5.Exit", 8, 1);
+
+    // 显示当前选择
+    switch(adminMenuIndex)
+    {
+        case ADMIN_MENU_MODIFY_PIN:
+            OLED_ShowString(120, 8, (uint8_t*)"<", 8, 1);
+            break;
+        case ADMIN_MENU_ENROLL_FINGER:
+            OLED_ShowString(120, 16, (uint8_t*)"<", 8, 1);
+            break;
+        case ADMIN_MENU_DELETE_FINGER:
+            OLED_ShowString(120, 24, (uint8_t*)"<", 8, 1);
+            break;
+        case ADMIN_MENU_DELETE_NFC:
+            OLED_ShowString(120, 32, (uint8_t*)"<", 8, 1);
+            break;
+        case ADMIN_MENU_EXIT:
+            OLED_ShowString(120, 40, (uint8_t*)"<", 8, 1);
+            break;
+        default:
+            break;
+    }
+
+    OLED_Refresh();
+}
+
+// 显示修改密码界面
+static void DisplayModifyPin(void)
+{
+    OLED_Clear();
+    OLED_ShowString(0, 0, (uint8_t*)"Modify PIN:", 8, 1);
+    
+    if(newPasswordIndex < 4)
+    {
+        OLED_ShowString(0, 16, (uint8_t*)"New PIN:", 8, 1);
+        for(uint8_t i = 0; i < 4; i++)
+        {
+            if(i < newPasswordIndex)
+                OLED_ShowNum(i * 16 + 64, 16, newPassword[i], 1, 8, 1);
+            else
+                OLED_ShowString(i * 16 + 64, 16, (uint8_t*)"_", 8, 1);
+        }
+    }
+    else
+    {
+        OLED_ShowString(0, 16, (uint8_t*)"Confirm:", 8, 1);
+        for(uint8_t i = 0; i < 4; i++)
+        {
+            if(i < confirmPasswordIndex)
+                OLED_ShowNum(i * 16 + 64, 16, confirmPassword[i], 1, 8, 1);
+            else
+                OLED_ShowString(i * 16 + 64, 16, (uint8_t*)"_", 8, 1);
+        }
+    }
+    
+    OLED_ShowString(0, 40, (uint8_t*)"KEY16:OK KEY8:Back", 8, 1);
+    OLED_Refresh();
+}
+
+// 显示录入指纹界面
+static void DisplayEnrollFinger(void)
+{
+    OLED_Clear();
+    OLED_ShowString(0, 0, (uint8_t*)"Enroll Fingerprint", 8, 1);
+    OLED_ShowString(0, 16, (uint8_t*)"ID:", 8, 1);
+    OLED_ShowNum(24, 16, selectedFingerID, 3, 8, 1);
+    OLED_ShowString(0, 32, (uint8_t*)"Place finger...", 8, 1);
+    OLED_ShowString(0, 48, (uint8_t*)"KEY16:Start", 8, 1);
+    OLED_ShowString(0, 56, (uint8_t*)"KEY8:Back", 8, 1);
+    OLED_Refresh();
+}
+
+// 显示删除指纹界面
+static void DisplayDeleteFinger(void)
+{
+    OLED_Clear();
+    OLED_ShowString(0, 0, (uint8_t*)"Delete Fingerprint", 8, 1);
+    OLED_ShowString(0, 16, (uint8_t*)"ID:", 8, 1);
+    OLED_ShowNum(24, 16, selectedFingerID, 3, 8, 1);
+    OLED_ShowString(0, 40, (uint8_t*)"KEY16:Delete", 8, 1);
+    OLED_ShowString(0, 56, (uint8_t*)"KEY8:Back", 8, 1);
+    OLED_Refresh();
+}
+
+// 显示删除NFC界面
+static void DisplayDeleteNFC(void)
+{
+    OLED_Clear();
+    OLED_ShowString(0, 0, (uint8_t*)"Delete NFC Card", 8, 1);
+    
+    NFC_CardInfo cards[MAX_NFC_IDS];
+    uint8_t count = Flash_ReadNFCIDs(cards);
+    
+    if(count == 0)
+    {
+        OLED_ShowString(0, 24, (uint8_t*)"No cards!", 8, 1);
+    }
+    else
+    {
+        uint8_t startIdx = (displayPage * 3);
+        for(uint8_t i = 0; i < 3 && (startIdx + i) < count; i++)
+        {
+            uint8_t y = 24 + i * 12;
+            uint8_t idx = startIdx + i;
+            
+            OLED_ShowNum(0, y, idx + 1, 1, 8, 1);
+            OLED_ShowString(8, y, (uint8_t*)":", 8, 1);
+            
+            if(cards[idx].type == NFC_TYPE_DOOR)
+                OLED_ShowString(16, y, (uint8_t*)"D", 8, 1);
+            else
+                OLED_ShowString(16, y, (uint8_t*)"P", 8, 1);
+            
+            OLED_ShowHex(28, y, (uint8_t)(cards[idx].id >> 24), 2, 8, 1);
+            OLED_ShowHex(44, y, (uint8_t)(cards[idx].id >> 16), 2, 8, 1);
+            OLED_ShowHex(60, y, (uint8_t)(cards[idx].id >> 8), 2, 8, 1);
+            OLED_ShowHex(76, y, (uint8_t)(cards[idx].id), 2, 8, 1);
+        }
+        
+        OLED_ShowString(0, 56, (uint8_t*)"1:Up 2:Dn 3:Del", 8, 1);
+    }
+    
+    OLED_ShowString(0, 64, (uint8_t*)"KEY8:Back", 8, 1);
+    OLED_Refresh();
+}
+
+// 进入后台管理界面
+void UI_EnterAdminMode(void)
+{
+    currentState = UI_STATE_ADMIN_MENU;
+    adminMenuIndex = 0;
+    adminCardDetectedFlag = 1; // 设置标志，防止重复检测
+    DisplayAdminMenu();
 }
 
 // 检查是否有两个NFC卡已注册
@@ -496,6 +650,243 @@ void UI_HandleKey(uint8_t key)
             break;
         }
         
+        case UI_STATE_ADMIN_MENU:
+        {
+            uint8_t num = KeyToNumber(key);
+            
+            if(num >= 1 && num <= 5)
+            {
+                adminMenuIndex = num - 1;
+                DisplayAdminMenu();
+            }
+            else if(key == 16) // 确定键，进入选中的菜单
+            {
+                switch(adminMenuIndex)
+                {
+                    case ADMIN_MENU_MODIFY_PIN:
+                        currentState = UI_STATE_ADMIN_MODIFY_PIN;
+                        newPasswordIndex = 0;
+                        confirmPasswordIndex = 0;
+                        DisplayModifyPin();
+                        break;
+                    case ADMIN_MENU_ENROLL_FINGER:
+                        currentState = UI_STATE_ADMIN_ENROLL_FINGER;
+                        selectedFingerID = 0;
+                        DisplayEnrollFinger();
+                        break;
+                    case ADMIN_MENU_DELETE_FINGER:
+                        currentState = UI_STATE_ADMIN_DELETE_FINGER;
+                        selectedFingerID = 0;
+                        DisplayDeleteFinger();
+                        break;
+                    case ADMIN_MENU_DELETE_NFC:
+                        currentState = UI_STATE_ADMIN_DELETE_NFC;
+                        displayPage = 0;
+                        DisplayDeleteNFC();
+                        break;
+                    case ADMIN_MENU_EXIT:
+                        currentState = UI_STATE_SELECT_MODE;
+                        adminCardDetectedFlag = 0;
+                        selectedMode = 0;
+                        DisplaySelectMode();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if(key == 8) // 返回键
+            {
+                currentState = UI_STATE_SELECT_MODE;
+                adminCardDetectedFlag = 0;
+                selectedMode = 0;
+                DisplaySelectMode();
+            }
+            break;
+        }
+        
+        case UI_STATE_ADMIN_MODIFY_PIN:
+        {
+            uint8_t num = KeyToNumber(key);
+            
+            if(num != 0xFF && newPasswordIndex < 4) // 输入新密码
+            {
+                newPassword[newPasswordIndex] = num;
+                newPasswordIndex++;
+                DisplayModifyPin();
+            }
+            else if(num != 0xFF && confirmPasswordIndex < 4) // 输入确认密码
+            {
+                confirmPassword[confirmPasswordIndex] = num;
+                confirmPasswordIndex++;
+                DisplayModifyPin();
+            }
+            else if(key == 16 && confirmPasswordIndex == 4) // 确定键
+            {
+                // 检查两次输入是否一致
+                uint8_t match = 1;
+                for(uint8_t i = 0; i < 4; i++)
+                {
+                    if(newPassword[i] != confirmPassword[i])
+                    {
+                        match = 0;
+                        break;
+                    }
+                }
+                
+                OLED_Clear();
+                if(match)
+                {
+                    // 保存新密码
+                    Flash_WritePIN(newPassword);
+                    OLED_ShowString(0, 16, (uint8_t*)"PIN Changed!", 8, 1);
+                }
+                else
+                {
+                    OLED_ShowString(0, 16, (uint8_t*)"PIN Mismatch!", 8, 1);
+                }
+                OLED_Refresh();
+                HAL_Delay(2000);
+                
+                currentState = UI_STATE_ADMIN_MENU;
+                DisplayAdminMenu();
+            }
+            else if(key == 8) // 返回键
+            {
+                currentState = UI_STATE_ADMIN_MENU;
+                DisplayAdminMenu();
+            }
+            break;
+        }
+        
+        case UI_STATE_ADMIN_ENROLL_FINGER:
+        {
+            uint8_t num = KeyToNumber(key);
+            
+            if(num != 0xFF && num <= 9 && selectedFingerID < 100)
+            {
+                selectedFingerID = selectedFingerID * 10 + num;
+                if(selectedFingerID > 299) selectedFingerID = 299;
+                DisplayEnrollFinger();
+            }
+            else if(key == 16) // 开始录入
+            {
+                if(selectedFingerID < AS608_MAX_FINGER_NUM)
+                {
+                    OLED_Clear();
+                    OLED_ShowString(0, 0, (uint8_t*)"Enrolling...", 8, 1);
+                    OLED_Refresh();
+                    
+                    uint8_t result = AS608_Enroll(selectedFingerID);
+                    
+                    OLED_Clear();
+                    if(result == AS608_ACK_OK)
+                    {
+                        OLED_ShowString(0, 16, (uint8_t*)"Enroll Success!", 8, 1);
+                    }
+                    else
+                    {
+                        OLED_ShowString(0, 16, (uint8_t*)"Enroll Failed!", 8, 1);
+                    }
+                    OLED_Refresh();
+                    HAL_Delay(2000);
+                }
+                currentState = UI_STATE_ADMIN_MENU;
+                DisplayAdminMenu();
+            }
+            else if(key == 8) // 返回键
+            {
+                currentState = UI_STATE_ADMIN_MENU;
+                DisplayAdminMenu();
+            }
+            break;
+        }
+        
+        case UI_STATE_ADMIN_DELETE_FINGER:
+        {
+            uint8_t num = KeyToNumber(key);
+            
+            if(num != 0xFF && num <= 9 && selectedFingerID < 100)
+            {
+                selectedFingerID = selectedFingerID * 10 + num;
+                if(selectedFingerID > 299) selectedFingerID = 299;
+                DisplayDeleteFinger();
+            }
+            else if(key == 16) // 删除指纹
+            {
+                if(selectedFingerID < AS608_MAX_FINGER_NUM)
+                {
+                    OLED_Clear();
+                    OLED_ShowString(0, 0, (uint8_t*)"Deleting...", 8, 1);
+                    OLED_Refresh();
+                    
+                    uint8_t result = AS608_DeleteChar(selectedFingerID, 1);
+                    
+                    OLED_Clear();
+                    if(result == AS608_ACK_OK)
+                    {
+                        OLED_ShowString(0, 16, (uint8_t*)"Delete Success!", 8, 1);
+                    }
+                    else
+                    {
+                        OLED_ShowString(0, 16, (uint8_t*)"Delete Failed!", 8, 1);
+                    }
+                    OLED_Refresh();
+                    HAL_Delay(2000);
+                }
+                currentState = UI_STATE_ADMIN_MENU;
+                DisplayAdminMenu();
+            }
+            else if(key == 8) // 返回键
+            {
+                currentState = UI_STATE_ADMIN_MENU;
+                DisplayAdminMenu();
+            }
+            break;
+        }
+        
+        case UI_STATE_ADMIN_DELETE_NFC:
+        {
+            NFC_CardInfo cards[MAX_NFC_IDS];
+            uint8_t count = Flash_ReadNFCIDs(cards);
+            uint8_t totalPages = (count + 2) / 3;
+            
+            if(key == 1) // 上一页
+            {
+                if(displayPage > 0)
+                {
+                    displayPage--;
+                    DisplayDeleteNFC();
+                }
+            }
+            else if(key == 2) // 下一页
+            {
+                if(displayPage < totalPages - 1)
+                {
+                    displayPage++;
+                    DisplayDeleteNFC();
+                }
+            }
+            else if(key == 3) // 删除当前页的第一个卡片
+            {
+                uint8_t idx = displayPage * 3;
+                if(idx < count)
+                {
+                    Flash_RemoveNFCID(cards[idx].id);
+                    OLED_Clear();
+                    OLED_ShowString(0, 16, (uint8_t*)"Card Deleted!", 8, 1);
+                    OLED_Refresh();
+                    HAL_Delay(1500);
+                }
+                DisplayDeleteNFC();
+            }
+            else if(key == 8) // 返回键
+            {
+                currentState = UI_STATE_ADMIN_MENU;
+                DisplayAdminMenu();
+            }
+            break;
+        }
+        
         default:
             break;
     }
@@ -615,6 +1006,13 @@ void UI_Process(void)
                             DisplayDoorCardYes();
                             return; // 立即返回，避免继续执行后续代码
                         }
+                        else if(cards[i].id == id && cards[i].type == NFC_TYPE_PERMISSION)
+                        {
+                            // 找到Perm Card，进入后台管理
+                            cardDetectedFlag = 1;
+                            UI_EnterAdminMode();
+                            return;
+                        }
                     }
                 }
             }
@@ -623,6 +1021,19 @@ void UI_Process(void)
         {
             // 卡片不在天线附近，清除标志
             cardDetectedFlag = 0;
+        }
+    }
+    else if(currentState == UI_STATE_ADMIN_MENU)
+    {
+        // 后台管理模式下检测Perm Card移开
+        uint8_t status;
+        uint8_t cardType[2];
+        
+        status = PCD_Request(PICC_REQIDL, cardType);
+        if(status != PCD_OK)
+        {
+            // Perm Card已移开
+            adminCardDetectedFlag = 0;
         }
     }
 }

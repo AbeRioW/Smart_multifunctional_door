@@ -6,15 +6,31 @@
 
 // UI状态枚举
 typedef enum {
-    UI_STATE_IDLE = 0,         // 空闲状态
-    UI_STATE_REGISTER_TYPE,    // 选择卡片类型
-    UI_STATE_REGISTER_SCAN,    // 扫描NFC卡片
-    UI_STATE_DISPLAY_LIST,     // 显示卡片列表
-    UI_STATE_SELECT_MODE,      // 选择解锁模式
-    UI_STATE_PASSWORD_INPUT,   // 密码输入界面
-    UI_STATE_FINGERPRINT_SCAN, // 指纹扫描界面
-    UI_STATE_DOOR_CARD_YES     // 显示Door Card yes界面
+    UI_STATE_IDLE = 0,              // 空闲状态
+    UI_STATE_REGISTER_TYPE,         // 选择卡片类型
+    UI_STATE_REGISTER_SCAN,         // 扫描NFC卡片
+    UI_STATE_DISPLAY_LIST,          // 显示卡片列表
+    UI_STATE_SELECT_MODE,           // 选择解锁模式
+    UI_STATE_PASSWORD_INPUT,        // 密码输入界面
+    UI_STATE_FINGERPRINT_SCAN,      // 指纹扫描界面
+    UI_STATE_DOOR_CARD_YES,         // 显示Door Card yes界面
+    UI_STATE_ADMIN_MENU,            // 后台管理菜单
+    UI_STATE_ADMIN_MODIFY_PIN,      // 修改密码
+    UI_STATE_ADMIN_ENROLL_FINGER,   // 录入指纹
+    UI_STATE_ADMIN_DELETE_FINGER,   // 删除指纹
+    UI_STATE_ADMIN_DELETE_NFC,      // 删除NFC
+    UI_STATE_ADMIN_CONFIRM          // 确认界面
 } UI_State_t;
+
+// 后台菜单项
+typedef enum {
+    ADMIN_MENU_MODIFY_PIN = 0,      // 修改密码
+    ADMIN_MENU_ENROLL_FINGER,       // 录入指纹
+    ADMIN_MENU_DELETE_FINGER,       // 删除指纹
+    ADMIN_MENU_DELETE_NFC,          // 删除NFC
+    ADMIN_MENU_EXIT,                // 回到主界面
+    ADMIN_MENU_MAX
+} Admin_Menu_t;
 
 // 检查是否有两个NFC卡已注册
 uint8_t UI_CheckTwoCards(void);
@@ -43,5 +59,8 @@ void UI_HandleKey(uint8_t key);
 
 // UI主循环处理函数
 void UI_Process(void);
+
+// 进入后台管理界面
+void UI_EnterAdminMode(void);
 
 #endif /* __UI_H__ */

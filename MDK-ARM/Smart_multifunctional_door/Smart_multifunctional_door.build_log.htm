@@ -32,11 +32,19 @@ compiling ui.c...
   #define FLASH_PAGE_SIZE      0x400  // 1KB per page
 ..\APP\RC522.h(151): warning:  #1-D: last line of file ends without a newline
   #endif
-..\APP\ui.c: 2 warnings, 0 errors
+..\APP\ui.c(18): warning:  #188-D: enumerated type mixed with another type
+  static Admin_Menu_t adminMenuIndex = 0;  // 当前选中的菜单项
+..\APP\ui.c(398): warning:  #188-D: enumerated type mixed with another type
+      adminMenuIndex = 0;
+..\APP\ui.c(659): warning:  #188-D: enumerated type mixed with another type
+                  adminMenuIndex = num - 1;
+..\APP\ui.c(24): warning:  #550-D: variable "adminCardDetectedFlag"  was set but never used
+  static uint8_t adminCardDetectedFlag = 0; // Perm Card检测标�?
+..\APP\ui.c: 6 warnings, 0 errors
 linking...
-Program Size: Code=13148 RO-data=6944 RW-data=40 ZI-data=3232  
+Program Size: Code=15668 RO-data=6944 RW-data=52 ZI-data=3236  
 FromELF: creating hex file...
-"Smart_multifunctional_door\Smart_multifunctional_door.axf" - 0 Error(s), 2 Warning(s).
+"Smart_multifunctional_door\Smart_multifunctional_door.axf" - 0 Error(s), 6 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -60,7 +68,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE:5.6.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:02
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>
