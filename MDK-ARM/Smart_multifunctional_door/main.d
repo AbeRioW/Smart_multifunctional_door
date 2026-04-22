@@ -7,14 +7,14 @@ smart_multifunctional_door\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx
 smart_multifunctional_door\main.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 smart_multifunctional_door\main.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
 smart_multifunctional_door\main.o: ../Drivers/CMSIS/Include/core_cm3.h
-smart_multifunctional_door\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+smart_multifunctional_door\main.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stdint.h
 smart_multifunctional_door\main.o: ../Drivers/CMSIS/Include/cmsis_version.h
 smart_multifunctional_door\main.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 smart_multifunctional_door\main.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 smart_multifunctional_door\main.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 smart_multifunctional_door\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 smart_multifunctional_door\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-smart_multifunctional_door\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+smart_multifunctional_door\main.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stddef.h
 smart_multifunctional_door\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 smart_multifunctional_door\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 smart_multifunctional_door\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
@@ -33,7 +33,7 @@ smart_multifunctional_door\main.o: ../Core/Inc/gpio.h
 smart_multifunctional_door\main.o: ../App/oled.h
 smart_multifunctional_door\main.o: ../App/RC522.h
 smart_multifunctional_door\main.o: ../App/AS608.h
-smart_multifunctional_door\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
-smart_multifunctional_door\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+smart_multifunctional_door\main.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\string.h
+smart_multifunctional_door\main.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stdio.h
 smart_multifunctional_door\main.o: ../App/ui.h
 smart_multifunctional_door\main.o: ../App/flash.h

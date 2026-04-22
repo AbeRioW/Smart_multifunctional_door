@@ -1,6 +1,6 @@
 smart_multifunctional_door\oled.o: ..\APP\oled.c
 smart_multifunctional_door\oled.o: ..\APP\oled.h
-smart_multifunctional_door\oled.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+smart_multifunctional_door\oled.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stdint.h
 smart_multifunctional_door\oled.o: ../Core/Inc/gpio.h
 smart_multifunctional_door\oled.o: ../Core/Inc/main.h
 smart_multifunctional_door\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
@@ -16,7 +16,7 @@ smart_multifunctional_door\oled.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 smart_multifunctional_door\oled.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 smart_multifunctional_door\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 smart_multifunctional_door\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-smart_multifunctional_door\oled.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+smart_multifunctional_door\oled.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stddef.h
 smart_multifunctional_door\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 smart_multifunctional_door\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 smart_multifunctional_door\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h

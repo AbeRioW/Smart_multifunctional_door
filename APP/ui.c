@@ -225,11 +225,18 @@ void UI_TriggerRelay(void)
     // 拉低继电器
     HAL_GPIO_WritePin(LAY_GPIO_Port, LAY_Pin, GPIO_PIN_RESET);
     
-    // 完全重置UI状态
-    UI_Init();
+    // 重置密码输入状态
+    passwordIndex = 0;
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        password[i] = 0;
+    }
     
     // 重新进入选择模式
     UI_EnterSelectMode();
+    
+    // 设置卡片检测标志，防止卡片仍然在天线范围内时立即再次触发
+    cardDetectedFlag = 1;
 }
 
 // 显示Door Card yes界面
@@ -606,7 +613,7 @@ void UI_Process(void)
                             cardDetectedFlag = 1; // 设置标志，避免持续检测
                             currentState = UI_STATE_DOOR_CARD_YES;
                             DisplayDoorCardYes();
-                            break;
+                            return; // 立即返回，避免继续执行后续代码
                         }
                     }
                 }
