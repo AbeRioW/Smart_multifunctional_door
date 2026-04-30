@@ -38,6 +38,11 @@ static uint32_t lastUnlockFailTime = 0;  // 上次解锁失败时间
 #define MAX_UNLOCK_FAIL_COUNT 3          // 最大解锁失败次数
 #define UNLOCK_FAIL_RESET_TIME 60000     // 60秒后重置失败计数（毫秒）
 
+// BEEP报警相关变量
+static uint8_t beepActive = 0;           // BEEP是否正在报警
+static uint32_t beepStartTime = 0;       // BEEP启动时间
+#define BEEP_DURATION 3000               // BEEP持续3秒
+
 // 指纹扫描相关变量
 static uint32_t lastFingerScanTime = 0;  // 上次指纹扫描时间
 #define FINGER_SCAN_INTERVAL 800         // 指纹扫描间隔800ms
@@ -399,10 +404,14 @@ static uint8_t UI_HandleUnlockFail(void)
     unlockFailCount++;
     lastUnlockFailTime = currentTime;
 
-    // 如果达到3次失败，发送警告并返回1
+    // 如果达到3次失败，发送警告、启动BEEP并返回1
     if(unlockFailCount >= MAX_UNLOCK_FAIL_COUNT)
     {
         UI_SendUnlockFailWarning();
+        // 启动BEEP报警
+        HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET); // 拉低BEEP（假设低电平有效）
+        beepActive = 1;
+        beepStartTime = currentTime;
         unlockFailCount = 0; // 清理计数
         return 1;
     }
@@ -413,6 +422,12 @@ static uint8_t UI_HandleUnlockFail(void)
 static void UI_ResetUnlockFailCount(void)
 {
     unlockFailCount = 0;
+    // 如果BEEP正在报警，关闭BEEP
+    if(beepActive)
+    {
+        HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET);
+        beepActive = 0;
+    }
 }
 
 // 解锁成功后的处理（非阻塞版本）
@@ -477,28 +492,32 @@ static void UI_ProcessUnlockState(void)
     }
 
     // 3秒后关闭继电器，但继续动态调节LED
-    if(currentTime - relayStartTime >= 3000)
-    {
-        // 拉低继电器
-        HAL_GPIO_WritePin(LAY_GPIO_Port, LAY_Pin, GPIO_PIN_RESET);
-
-        // 不关闭LED，继续动态调节
-        // 不清除unlockSuccessFlag，保持LED调节状态
-
-        // 重置密码输入状态
-        passwordIndex = 0;
-        for(uint8_t i = 0; i < 4; i++)
+        if(currentTime - relayStartTime >= 3000)
         {
-            password[i] = 0;
+            // 拉低继电器
+            HAL_GPIO_WritePin(LAY_GPIO_Port, LAY_Pin, GPIO_PIN_RESET);
+
+            // 不关闭LED，继续动态调节
+            // 不清除unlockSuccessFlag，保持LED调节状态
+
+            // 重置密码输入状态
+            passwordIndex = 0;
+            for(uint8_t i = 0; i < 4; i++)
+            {
+                password[i] = 0;
+            }
+
+            // 重新进入选择模式
+            UI_EnterSelectMode();
+
+            // 清除解锁成功标志，允许再次进行NFC检测
+            // 注意：用户如果卡片未移开，需要等待卡片移开后再刷才能再次解锁
+            unlockSuccessFlag = 0;
+
+            // 设置卡片检测标志，防止卡片未移开时立即重复触发
+            cardDetectedFlag = 1;
         }
-
-        // 重新进入选择模式
-        UI_EnterSelectMode();
-
-        // 设置卡片检测标志，防止卡片仍然在天线范围内时立即再次触发
-        cardDetectedFlag = 1;
     }
-}
 
 // 控制继电器：ON-3秒后自动OFF，显示欢迎信息，并根据光照调节LED（旧版本，保留兼容）
 // method: 解锁方式
@@ -788,6 +807,7 @@ void UI_Init(void)
     passwordIndex = 0;
     cardDetectedFlag = 0;
     unlockSuccessFlag = 0;
+    beepActive = 0;
     for(uint8_t i = 0; i < 4; i++)
     {
         password[i] = 0;
@@ -795,6 +815,9 @@ void UI_Init(void)
 
     // 初始化LED为熄灭状态
     UI_InitLED();
+
+    // 初始化BEEP为关闭状态（假设高电平关闭）
+    HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET);
 }
 
 // 初始化UI并显示默认界面
@@ -969,8 +992,7 @@ void UI_HandleKey(uint8_t key)
                     passwordIndex = 0;
                     if(failResult)
                     {
-                        // 3次失败，发送警告并退出到select mode
-                        UI_SendUnlockFailWarning();
+                        // 3次失败，退出到select mode（BEEP和警告已在UI_HandleUnlockFail中处理）
                         currentState = UI_STATE_SELECT_MODE;
                         DisplaySelectMode();
                     }
@@ -1573,6 +1595,33 @@ void UI_Process(void)
     // 处理串口接收到的数据
     UI_HandleUartRx();
 
+    // 处理BEEP报警定时关闭
+    if(beepActive)
+    {
+        uint32_t currentTime = HAL_GetTick();
+        if(currentTime - beepStartTime >= BEEP_DURATION)
+        {
+            // 3秒后关闭BEEP
+            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET); // 拉高BEEP（关闭）
+            beepActive = 0;
+        }
+    }
+
+    // 在Select Mode下定期调节LED亮度（根据光照）
+    if(currentState == UI_STATE_SELECT_MODE)
+    {
+        static uint32_t lastLedAdjustTime = 0;
+        uint32_t currentTime = HAL_GetTick();
+        if(currentTime - lastLedAdjustTime >= 3000)
+        {
+            lastLedAdjustTime = currentTime;
+            uint16_t lightValue = UI_ReadLightValue();
+            UI_SetLEDBrightness(lightValue);
+            // 根据光照值控制舵机
+            UI_ControlServoByLight(lightValue);
+        }
+    }
+
     // 如果是显示欢迎界面状态，直接返回，不做任何处理
     if(currentState == UI_STATE_DOOR_CARD_YES)
     {
@@ -1671,8 +1720,11 @@ void UI_Process(void)
             fingerFailCount++;
             if(fingerFailCount >= 3)
             {
-                // 发送警告并退出
+                // 发送警告并启动BEEP
                 UI_SendUnlockFailWarning();
+                HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
+                beepActive = 1;
+                beepStartTime = HAL_GetTick();
                 fingerFailCount = 0;
                 currentState = UI_STATE_SELECT_MODE;
                 DisplaySelectMode();
@@ -1710,8 +1762,11 @@ void UI_Process(void)
 
             if(fingerFailCount >= 3)
             {
-                // 3次失败，发送警告并退出
+                // 3次失败，发送警告并启动BEEP
                 UI_SendUnlockFailWarning();
+                HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
+                beepActive = 1;
+                beepStartTime = HAL_GetTick();
                 fingerFailCount = 0;
                 currentState = UI_STATE_SELECT_MODE;
                 DisplaySelectMode();
@@ -1784,13 +1839,8 @@ void UI_Process(void)
                         OLED_Refresh();
                         HAL_Delay(1000);
 
-                        // 处理解锁失败
-                        uint8_t failResult = UI_HandleUnlockFail();
-                        if(failResult)
-                        {
-                            // 3次失败，发送警告
-                            UI_SendUnlockFailWarning();
-                        }
+                        // 处理解锁失败（BEEP和警告已在UI_HandleUnlockFail中处理）
+                        UI_HandleUnlockFail();
                     }
                 }
             }

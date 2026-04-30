@@ -73,6 +73,8 @@ void Error_Handler(void);
 #define SPI1_RST_GPIO_Port GPIOB
 #define LAY_Pin GPIO_PIN_13
 #define LAY_GPIO_Port GPIOB
+#define BEEP_Pin GPIO_PIN_15
+#define BEEP_GPIO_Port GPIOB
 #define LINE1_Pin GPIO_PIN_5
 #define LINE1_GPIO_Port GPIOB
 #define LINE2_Pin GPIO_PIN_6
