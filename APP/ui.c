@@ -284,7 +284,7 @@ static uint16_t UI_ReadLightValue(void)
 
 // 根据光照值设置LED亮度（PWM）- 5档调节
 // lightValue: 0-4095，光照值越大表示环境越亮
-// LED正极接VCC，负极接PA15，所以PWM低电平有效（占空比越大LED越亮）
+// LED正极接VCC，负极接PA15，所以PWM低电平有效（占空比越小LED越亮）
 static void UI_SetLEDBrightness(uint16_t lightValue)
 {
     // 启动TIM2 PWM
@@ -293,20 +293,21 @@ static void UI_SetLEDBrightness(uint16_t lightValue)
     // 计算PWM占空比 - 5档调节
     // 光照值范围: 0-4095
     // PWM占空比范围: 0-19999 (对应0-100%)
-    // 环境越暗(lightValue小)，LED越亮(PWM占空比大)
+    // LED负极接PWM，低电平有效：占空比越小，LED越亮
+    // 环境越亮(lightValue大)，LED越亮(占空比越小)
 
     uint16_t pwmDuty;
 
-    if(lightValue < 800)        // 很暗
-        pwmDuty = 19999;         // 100%占空比 = LED最亮
-    else if(lightValue < 1600)  // 较暗
-        pwmDuty = 16000;         // 80%占空比 = LED较亮
-    else if(lightValue < 2400)  // 正常
-        pwmDuty = 12000;         // 60%占空比 = LED中等
-    else if(lightValue < 3200)  // 较亮
-        pwmDuty = 6000;          // 30%占空比 = LED较暗
-    else                        // 很亮
-        pwmDuty = 0;             // 0%占空比 = LED最暗（接近关闭）
+    if(lightValue < 800)        // 环境很暗 → LED最暗（关闭）
+        pwmDuty = 19999;         // 100%占空比，持续高电平，LED灭
+    else if(lightValue < 1600)  // 环境较暗 → LED较暗
+        pwmDuty = 16000;         // 80%占空比
+    else if(lightValue < 2400)  // 环境正常 → LED中等
+        pwmDuty = 12000;         // 60%占空比
+    else if(lightValue < 3200)  // 环境较亮 → LED较亮
+        pwmDuty = 6000;          // 30%占空比
+    else                        // 环境很亮 → LED最亮
+        pwmDuty = 0;             // 0%占空比，持续低电平，LED最亮
 
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, pwmDuty);
 }
